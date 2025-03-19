@@ -7,7 +7,7 @@ from PIL import Image, UnidentifiedImageError
 from config import OUTPUT_DIR, DELIMITER
 
 
-def _load_image(image_path: str):
+def __load_image(image_path: str):
     """
     Helper function to load an image and return the image data.
 
@@ -51,7 +51,7 @@ def encode(
         raise ValueError("You can't use an empty message.")
 
     # Load image and check its size
-    data, (width, height) = _load_image(image_path)
+    data, (width, height) = __load_image(image_path)
 
     # Add delimiter to message
     message += DELIMITER
@@ -109,7 +109,7 @@ def decode(image_path: str) -> str:
     :raises Exception: For any other unexpected error.
     """
     # Load image
-    data, _ = _load_image(image_path)
+    data, _ = __load_image(image_path)
 
     # Flatten the pixel arrays
     data = data.flatten()
