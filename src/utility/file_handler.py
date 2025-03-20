@@ -4,7 +4,7 @@ from PIL import Image, UnidentifiedImageError
 
 def load_message(message_path: str) -> str:
     """
-    Helper function to load a text file containing the message and return the message text.
+    Load a text file containing the message and return the message text.
 
     :param message_path: The path to the message file.
     :return: The message data as a string.
@@ -15,14 +15,14 @@ def load_message(message_path: str) -> str:
             message = text.read()
         return message
     except FileNotFoundError:
-        raise FileNotFoundError(f"The file '{message_path}' was not found. Please verify the path.")
+        raise FileNotFoundError(f'The file \'{message_path}\' was not found. Please verify the path.')
     except Exception as e:
-        raise Exception(f"An unexpected error occurred while loading message {message_path}: {e}")
+        raise Exception(f'An unexpected error occurred while loading message {message_path}: {e}')
 
 
 def load_image(image_path: str) ->  tuple[np.ndarray, tuple[int, int]]:
     """
-    Helper function to load an image and return the image data.
+    Load an image and return the image data.
 
     :param image_path: The path to the image file.
     :return: The image data as a numpy array and its size.
@@ -34,8 +34,8 @@ def load_image(image_path: str) ->  tuple[np.ndarray, tuple[int, int]]:
             data = np.array(img)
         return data, img.size
     except FileNotFoundError:
-        raise FileNotFoundError(f"The file '{image_path}' was not found. Please verify the path.")
+        raise FileNotFoundError(f'The file \'{image_path}\' was not found. Please verify the path.')
     except UnidentifiedImageError:
-        raise UnidentifiedImageError(f"The file '{image_path}' is not a valid image or is corrupt.")
+        raise UnidentifiedImageError(f'The file \'{image_path}\' is not a valid image or is corrupt.')
     except Exception as e:
-        raise Exception(f"An unexpected error occurred while loading image {image_path}: {e}")
+        raise Exception(f'An unexpected error occurred while loading image {image_path}: {e}')

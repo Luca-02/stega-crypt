@@ -4,8 +4,8 @@ from unittest import TestCase
 
 from PIL import Image, UnidentifiedImageError
 
-from decoder import decode_message
-from encoder import encode_message
+from src.decoder import decode_message
+from src.encoder import encode_message
 
 
 class Test(TestCase):
@@ -26,11 +26,52 @@ class Test(TestCase):
         message = "Hello World!"
         encoded_image_path = os.path.join(self.output_path, "encoded_image.png")
 
-        encode_message(self.image_path, message, output_path=self.output_path, new_image_name="encoded_image")
+        encode_message(
+            self.image_path,
+            message,
+            output_path=self.output_path,
+            new_image_name="encoded_image",
+            compress=False
+        )
         decoded_message = decode_message(encoded_image_path)
 
         self.assertTrue(os.path.isfile(encoded_image_path))
-        self.assertEqual(decoded_message, message)
+        self.assertEqual(message, decoded_message)
+
+    def test_encode_decode_message_compressed(self):
+        message = "Hello World!"
+        encoded_image_path = os.path.join(self.output_path, "encoded_image.png")
+
+        encode_message(
+            self.image_path,
+            message=message,
+            output_path=self.output_path,
+            new_image_name="encoded_image",
+            compress=True
+        )
+        decoded_message = decode_message(encoded_image_path)
+
+        self.assertTrue(os.path.isfile(encoded_image_path))
+        self.assertEqual(message, decoded_message)
+
+    def test_encode_decode_message_from_file(self):
+        message = "Hello World!"
+        with open(self.message_path, 'w') as file:
+            file.write(message)
+
+        encoded_image_path = os.path.join(self.output_path, "encoded_image.png")
+
+        encode_message(
+            self.image_path,
+            message_path=self.message_path,
+            output_path=self.output_path,
+            new_image_name="encoded_image",
+            compress=False
+        )
+        decoded_message = decode_message(encoded_image_path)
+
+        self.assertTrue(os.path.isfile(encoded_image_path))
+        self.assertEqual(message, decoded_message)
 
     def test_empty_message(self):
         with self.assertRaises(ValueError):

@@ -4,11 +4,33 @@ from typing import Optional
 import numpy as np
 from PIL import Image
 
+from config import OUTPUT_DIR, COMPRESSION_PREFIX, DELIMITER_SUFFIX
 from utility.compressor import compress_message
-from config import DELIMITER
-from config import OUTPUT_DIR
 from utility.converter import bytes_to_bits_binary_list
 from utility.file_handler import load_image, load_message
+
+
+def __create_hidden_message(message: str, compression: bool) -> bytes:
+    """
+    Prepare the message to hide, with or without compression.
+
+    :param message: The plaintext message.
+    :param compression: If True, apply compression. If False, no compression.
+    If None, automatically choose the most efficient option.
+
+    :return: The message ready to be hidden in the image.
+    """
+    encoded_message = message.encode() + DELIMITER_SUFFIX.encode()
+
+    if compression is False:
+        return encoded_message
+
+    compressed_message = COMPRESSION_PREFIX.encode() + compress_message(message.encode()) + DELIMITER_SUFFIX.encode()
+
+    if compression or len(compressed_message) < len(encoded_message):
+        return compressed_message
+
+    return encoded_message
 
 
 def __modify_lsb(flat_data: np.ndarray, b_message: list[int]) -> None:
@@ -18,7 +40,6 @@ def __modify_lsb(flat_data: np.ndarray, b_message: list[int]) -> None:
     :param flat_data: Flattened NumPy array of image pixels.
     :param b_message: List of binary bits representing the message.
     """
-
     target_data = flat_data[:len(b_message)]
 
     # Set the LSBs to 0 and then insert message bits
@@ -45,67 +66,50 @@ def __add_noise(flat_data: np.ndarray, used_bits: int) -> None:
     flat_data[used_bits:] = unused_data
 
 
-def encode_message_from_file(
-        image_path: str,
-        message_path: str,
-        output_path: str = OUTPUT_DIR,
-        new_image_name: Optional[str] = None
-) -> None:
-    """
-    Encodes a hidden message from a text file into an image using the Least Significant Bit (LSB) technique.
-
-    :param image_path: The path to the input image.
-    :param message_path: Path to a text file containing the message.
-    :param output_path: The output folder to save the modified image. Default is './.output'.
-    :param new_image_name: The name of the new image file. If not specified, '-modified' is appended to the original name.
-
-    :raises FileNotFoundError: If the image file is not found.
-    :raises ValueError: If the message is too large to fit in the image.
-    :raises FileExistsError: If the output file already exists.
-    :raises Exception: For any other unexpected error.
-    """
-    message = load_message(message_path)
-
-    encode_message(image_path, message, output_path, new_image_name)
-
-
 def encode_message(
         image_path: str,
-        message: str,
-        output_path: str = OUTPUT_DIR,
-        new_image_name: Optional[str] = None
+        message: Optional[str] = None,
+        message_path: Optional[str] = None,
+        output_path: Optional[str] = OUTPUT_DIR,
+        new_image_name: Optional[str] = None,
+        compress: Optional[bool] = None
 ) -> None:
     """
     Encodes a hidden compressed message into an image using the Least Significant Bit (LSB) technique.
 
     :param image_path: The path to the input image.
-    :param message: The message to be hidden within the image.
+    :param message: Message to hide (if not using a text file).
+    :param message_path: Path to the text file containing the message (optional).
     :param output_path: The output folder to save the modified image. Default is './.output'.
     :param new_image_name: The name of the new image file. If not specified, '-modified' is appended to the original name.
+    :param compress: Boolean value to indicate whether to compress the message, if not specified it will be
+    automatically compressed if it is convenient with respect to the weight of the compressed message.
 
     :raises FileNotFoundError: If the image file is not found.
     :raises ValueError: If the message is too large to fit in the image.
     :raises FileExistsError: If the output file already exists.
     :raises Exception: For any other unexpected error.
     """
+    if message_path:
+        message = load_message(message_path)
+
     # Validate message
     if not message:
-        raise ValueError("You can't use an empty message.")
+        raise ValueError('You can\'t use an empty message.')
 
     image_data, (width, height) = load_image(image_path)
 
     # Add delimiter to message
-    compressed_message = compress_message(message.encode()) + DELIMITER.encode()
+    hidden_message = __create_hidden_message(message, compress)
 
     # Convert to bit array
-    binary_message = bytes_to_bits_binary_list(compressed_message)
+    binary_message = bytes_to_bits_binary_list(hidden_message)
 
     # Flatten the pixel arrays
     flat_data = image_data.flatten()
 
     if len(binary_message) > len(flat_data):
-        raise ValueError(
-            f"Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit.")
+        raise ValueError(f'Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit.')
 
     # Add message and random noise
     __modify_lsb(flat_data, binary_message)
@@ -127,7 +131,7 @@ def encode_message(
 
     # Check if the output file already exists
     if os.path.isdir(output_path) and os.path.isfile(output_file_path):
-        raise FileExistsError(f"The file '{new_image_name}' already exists in the directory '{output_path}'.")
+        raise FileExistsError(f'The file \'{new_image_name}\' already exists in the directory \'{output_path}\'.')
 
     # Create and save the new image with the hidden message
     if not os.path.exists(output_path):
@@ -137,4 +141,4 @@ def encode_message(
     try:
         new_img.save(output_file_path, format=file_extension.upper())
     except Exception as e:
-        raise Exception(f"An unexpected error occurred while saving image {output_file_path}: {e}")
+        raise Exception(f'An unexpected error occurred while saving image {output_file_path}: {e}')

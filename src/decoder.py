@@ -1,7 +1,7 @@
 import numpy as np
 
+from config import DELIMITER_SUFFIX, COMPRESSION_PREFIX
 from utility.compressor import decompress_message
-from config import DELIMITER
 from utility.file_handler import load_image
 
 
@@ -15,6 +15,7 @@ def decode_message(image_path: str) -> str:
 
     :raises FileNotFoundError: If the image file is not found.
     :raises UnidentifiedImageError: If the file is not a valid image.
+    :raises ValueError: If no valid message was found.
     :raises Exception: For any other unexpected error.
     """
     image_data, _ = load_image(image_path)
@@ -29,13 +30,18 @@ def decode_message(image_path: str) -> str:
     pack_data = np.packbits(lsb_data)
 
     # Read and convert integers to Unicode characters until hitting a non-printable character or the delimiter
-    message = b''
-    for pack in pack_data:
-        message += int(pack).to_bytes()
-
-        # If the message ends with the delimiter, remove it and break
-        if message.endswith(DELIMITER.encode()):
-            message = message[:-len(DELIMITER)]
+    message_bytes = bytearray()
+    for byte in pack_data:
+        message_bytes.append(byte)
+        if message_bytes.endswith(DELIMITER_SUFFIX.encode()):
+            message_bytes = message_bytes[:-len(DELIMITER_SUFFIX)]
             break
 
-    return decompress_message(message).decode()
+    # If we found an empty message
+    if not message_bytes:
+        raise ValueError('No valid message found in the image.')
+
+    if message_bytes.startswith(COMPRESSION_PREFIX.encode()):
+        return decompress_message(message_bytes[len(COMPRESSION_PREFIX):]).decode()
+
+    return message_bytes.decode()
