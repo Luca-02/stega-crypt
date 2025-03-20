@@ -2,7 +2,7 @@ import os
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-OUTPUT_DIR = os.path.join(PROJECT_ROOT, '.output')
+OUTPUT_DIR = PROJECT_ROOT
 
 COMPRESSION_PREFIX = '\x01CMP'
 

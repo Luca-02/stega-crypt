@@ -4,8 +4,8 @@ from unittest import TestCase
 
 from PIL import Image, UnidentifiedImageError
 
-from src.decoder import decode_message
-from src.encoder import encode_message
+from src.steganography.decoder import decode_message
+from src.steganography.encoder import encode_message
 
 
 class Test(TestCase):
