@@ -49,5 +49,5 @@ jobs:
     - name: Archive package
       uses: actions/upload-artifact@v4
       with:
-        name: awesome-calculator
+        name: stega-crypt
         path: dist
