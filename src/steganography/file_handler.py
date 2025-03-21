@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 
@@ -20,22 +22,51 @@ def load_message(message_path: str) -> str:
         raise Exception(f'An unexpected error occurred while loading message {message_path}: {e}')
 
 
-def load_image(image_path: str) ->  tuple[np.ndarray, tuple[int, int]]:
+def load_image(image_path: str) -> np.ndarray:
     """
     Load an image and return the image data.
 
     :param image_path: The path to the image file.
-    :return: The image data as a numpy array and its size.
+    :return: The image data as a numpy array.
     :raises FileNotFoundError: If the image file does not exist.
     :raises UnidentifiedImageError: If the image file is invalid or corrupted.
     """
     try:
         with Image.open(image_path) as img:
-            data = np.array(img)
-        return data, img.size
+            return np.array(img)
     except FileNotFoundError:
         raise FileNotFoundError(f'The file \'{image_path}\' was not found. Please verify the path.')
     except UnidentifiedImageError:
         raise UnidentifiedImageError(f'The file \'{image_path}\' is not a valid image or is corrupt.')
     except Exception as e:
         raise Exception(f'An unexpected error occurred while loading image {image_path}: {e}')
+
+
+def save_image(image_data: np.ndarray, output_path: str, image_name: str, image_format: str):
+    """
+    Save an image to the specified path.
+
+    :param image_data: NumPy array containing image data.
+    :param output_path: Directory to save the image in.
+    :param image_name: Name of the output file.
+    :param image_format: Image format to save as.
+    :return: Path to the saved file.
+    :raises FileHandlingError: If the file couldn't be saved.
+    """
+    new_image = f"{image_name}.{image_format}"
+
+    output_file_path = os.path.join(output_path, f"{new_image}")
+
+    # Check if the output file already exists
+    if os.path.isdir(output_path) and os.path.isfile(output_file_path):
+        raise FileExistsError(f'The file \'{new_image}\' already exists in the directory \'{output_path}\'.')
+
+    # Create and save the new image with the hidden message
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    new_img = Image.fromarray(image_data)
+    try:
+        new_img.save(output_file_path, format=image_format)
+    except Exception as e:
+        raise Exception(f'An unexpected error occurred while saving image {output_file_path}: {e}')
