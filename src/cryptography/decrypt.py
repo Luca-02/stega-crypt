@@ -4,7 +4,8 @@ from typing import Optional
 from Crypto.Cipher import AES
 
 from .derivation import derive_key_from_password
-from .password_handler import clean_password
+from .password_handler import clean_password, is_valid_password
+from ..config import SALT_SIZE_BYTE, NONCE_SIZE_BYTE, TAG_SIZE_BYTE
 from ..exceptions import InvalidPasswordError, DecryptionError
 
 
@@ -20,13 +21,16 @@ def decrypt_message(encrypted_data: bytes, password: Optional[str] = None) -> by
     password = clean_password(password)
     encrypted_data = base64.b64decode(encrypted_data)
 
-    # Extract salt, nonce, ciphertext, and tag
-    salt = encrypted_data[:16]  # Salt is the first 16 bytes
-    nonce = encrypted_data[16:32]  # Nonce is the next 16 bytes
-    ciphertext = encrypted_data[32:-16]  # Ciphertext is everything in between
-    tag = encrypted_data[-16:]  # Tag is the last 16 bytes
+    # Salt is the first 16 bytes
+    salt = encrypted_data[:SALT_SIZE_BYTE]
+    # Nonce is the next 16 bytes
+    nonce = encrypted_data[SALT_SIZE_BYTE:SALT_SIZE_BYTE + NONCE_SIZE_BYTE]
+    # Ciphertext is everything in between
+    ciphertext = encrypted_data[SALT_SIZE_BYTE + NONCE_SIZE_BYTE:-TAG_SIZE_BYTE]
+    # Tag is the last 16 bytes
+    tag = encrypted_data[-TAG_SIZE_BYTE:]
 
-    if password:
+    if is_valid_password(password):
         key = derive_key_from_password(password, salt)
     else:
         raise InvalidPasswordError('You must provide a password.')

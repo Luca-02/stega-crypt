@@ -2,13 +2,12 @@ import os
 from typing import Optional
 
 import numpy as np
-from PIL import Image
 
+from src.steganography.file_handler import load_image, load_message, save_image
 from .compressor import compress_message
 from ..config import DEFAULT_OUTPUT_DIR, COMPRESSION_PREFIX, DELIMITER_SUFFIX
 from ..cryptography.encrypt import encrypt_data
 from ..exceptions import MessageTooLargeError, NoMessageFoundError
-from src.steganography.file_handler import load_image, load_message, save_image
 
 
 def __create_hidden_message(message: str, password: str, compression: bool) -> bytes:
@@ -37,22 +36,22 @@ def __create_hidden_message(message: str, password: str, compression: bool) -> b
     return hidden_message
 
 
-def __bytes_to_bits_binary_list(byte_data: bytes) -> list[int]:
+def __bytes_to_bits_binary_list(byte_data: bytes) -> np.ndarray:
     """
-    Converts a bytes object into a list of binary bits.
+    Converts bytes data to a bit array.
 
-    :param byte_data: Bytes object.
-    :return: The corresponding list of binary bits.
+    :param byte_data: Bytes to convert.
+    :return: NumPy array of bits (0s and 1s).
     """
-    return [int(bit) for bit in ''.join(f'{byte:08b}' for byte in byte_data)]
+    return np.unpackbits(np.frombuffer(byte_data, dtype=np.uint8))
 
 
-def __modify_lsb(flat_data: np.ndarray, b_message: list[int]) -> None:
+def __modify_lsb(flat_data: np.ndarray, b_message: np.ndarray) -> None:
     """
     Change the least significant bits (LSB) of the pixels to the message bits.
 
     :param flat_data: Flattened NumPy array of image pixels.
-    :param b_message: List of binary bits representing the message.
+    :param b_message: NumPy array of binary bits representing the message.
     """
     target_data = flat_data[:len(b_message)]
 
@@ -78,6 +77,31 @@ def __add_noise(flat_data: np.ndarray, used_bits: int) -> None:
     unused_data ^= noise_mask
 
     flat_data[used_bits:] = unused_data
+
+
+def __embed_hidden_message_in_image(image_data: np.ndarray, binary_message: np.ndarray) -> np.ndarray:
+    """
+    Embed message bits into the LSB of the image pixels adding some random noise.
+
+    :param image_data: NumPy array of image data.
+    :param binary_message: NumPy array of message binary bits.
+    :return: Modified image data with embedded message.
+    :raises MessageTooLargeError: If the message doesn't fit in the image.
+    """
+    # Flatten the pixel arrays
+    flat_data = image_data.flatten()
+
+    # Check if message will fit
+    if len(binary_message) > len(flat_data):
+        raise MessageTooLargeError(
+            f'Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit.')
+
+    # Add message and random noise
+    __modify_lsb(flat_data, binary_message)
+    __add_noise(flat_data, len(binary_message))
+
+    # Reshape back to an image pixel array
+    return np.reshape(flat_data, image_data.shape)
 
 
 def encode_message(
@@ -116,7 +140,7 @@ def encode_message(
     if not message:
         raise NoMessageFoundError('You can\'t use an empty message.')
 
-    image_data, (width, height) = load_image(image_path)
+    image_data = load_image(image_path)
 
     # Create the hidden message
     hidden_message = __create_hidden_message(message, password, compress)
@@ -124,18 +148,8 @@ def encode_message(
     # Convert to bit array
     binary_message = __bytes_to_bits_binary_list(hidden_message)
 
-    # Flatten the pixel arrays
-    flat_data = image_data.flatten()
-
-    if len(binary_message) > len(flat_data):
-        raise MessageTooLargeError(f'Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit.')
-
-    # Add message and random noise
-    __modify_lsb(flat_data, binary_message)
-    __add_noise(flat_data, len(binary_message))
-
-    # Reshape back to an image pixel array
-    modified_data = np.reshape(flat_data, (width, height, 3))
+    # Embed message in image
+    modified_image = __embed_hidden_message_in_image(image_data, binary_message)
 
     # If the modified image name is not specified, add "-modified" to the original name
     if new_image_name is None:
@@ -145,4 +159,4 @@ def encode_message(
     # Determines the extent of the input image
     image_format = os.path.splitext(image_path)[1].lower().strip(".")
 
-    save_image(modified_data, output_path, new_image_name, image_format)
+    save_image(modified_image, output_path, new_image_name, image_format)

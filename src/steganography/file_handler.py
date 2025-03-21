@@ -22,19 +22,18 @@ def load_message(message_path: str) -> str:
         raise Exception(f'An unexpected error occurred while loading message {message_path}: {e}')
 
 
-def load_image(image_path: str) -> tuple[np.ndarray, tuple[int, int]]:
+def load_image(image_path: str) -> np.ndarray:
     """
     Load an image and return the image data.
 
     :param image_path: The path to the image file.
-    :return: The image data as a numpy array and its size.
+    :return: The image data as a numpy array.
     :raises FileNotFoundError: If the image file does not exist.
     :raises UnidentifiedImageError: If the image file is invalid or corrupted.
     """
     try:
         with Image.open(image_path) as img:
-            data = np.array(img)
-        return data, img.size
+            return np.array(img)
     except FileNotFoundError:
         raise FileNotFoundError(f'The file \'{image_path}\' was not found. Please verify the path.')
     except UnidentifiedImageError:

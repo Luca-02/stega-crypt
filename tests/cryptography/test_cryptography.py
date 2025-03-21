@@ -20,10 +20,19 @@ class Test(TestCase):
         with self.assertRaises(InvalidPasswordError):
             encrypt_data(self.message, password='')
 
+    def test_encrypt_invalid_password(self):
+        with self.assertRaises(InvalidPasswordError):
+            encrypt_data(self.message, password='c1A 0!?')
+
     def test_dencrypt_empty_password(self):
         with self.assertRaises(InvalidPasswordError):
             encrypted = encrypt_data(self.message, password=self.password)
             decrypt_message(encrypted, password='')
+
+    def test_dencrypt_invalid_password(self):
+        with self.assertRaises(InvalidPasswordError):
+            encrypted = encrypt_data(self.message, password=self.password)
+            decrypt_message(encrypted, password='c1A 0!?')
 
     def test_dencrypt_wrong_password(self):
         with self.assertRaises(DecryptionError):
