@@ -1,5 +1,6 @@
-import re
-from re import Match
+from re import match
+
+from ..config import MIN_PASSWORD_LENGTH
 
 
 def clean_password(password: str) -> str:
@@ -12,20 +13,17 @@ def clean_password(password: str) -> str:
     return password.strip()
 
 
-def is_valid_password(password: str) -> Match[str] | None:
+def is_valid_password(password: str) -> bool:
     """
     Soft password validation:
-        - Should be at least 4 characters long.
+        - Should be at least MIN_PASSWORD_LENGTH characters long.
         - Should not contain spaces.
 
     :param password: The password to validate.
-
     :return: A match if it's a valid password, otherwise None
     """
-    reg = r'^\S{4,}$'
+    if not password:
+        return False
 
-    # Compiling regex
-    pat = re.compile(reg)
-
-    # Searching regex
-    return re.search(pat, password)
+    pattern = rf'^\S{{{MIN_PASSWORD_LENGTH},}}$'
+    return bool(match(pattern, password))

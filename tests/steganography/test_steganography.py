@@ -4,6 +4,7 @@ from unittest import TestCase
 
 from PIL import Image, UnidentifiedImageError
 
+from src.exceptions import NoMessageFoundError, MessageTooLargeError
 from src.steganography.decoder import decode_message
 from src.steganography.encoder import encode_message
 
@@ -89,11 +90,22 @@ class Test(TestCase):
         self.assertEqual(self.message, decoded_message)
 
     def test_encode_empty_message_error(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NoMessageFoundError):
             encode_message(
                 image_path=self.image_path,
                 message='',
                 output_path=self.output_path
+            )
+
+    def test_encode_too_large_message_error(self):
+        with self.assertRaises(MessageTooLargeError):
+            encode_message(
+                image_path=self.image_path,
+                message='A' * (self.img_size[0] ** 2 * 2),
+                output_path=self.output_path,
+                new_image_name="encoded_image",
+                password=self.password,
+                compress=True
             )
 
     def test_encode_invalid_message_path_error(self):

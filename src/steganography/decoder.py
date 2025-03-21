@@ -1,10 +1,12 @@
-import numpy as np
 from typing import Optional
 
-from config import DELIMITER_SUFFIX, COMPRESSION_PREFIX
-from steganography.compressor import decompress_message
-from utils.file_handler import load_image
-from cryptography.decrypt import decrypt_message
+import numpy as np
+
+from .compressor import decompress_message
+from ..config import DELIMITER_SUFFIX, COMPRESSION_PREFIX
+from ..cryptography.decrypt import decrypt_message
+from ..exceptions import NoMessageFoundError
+from src.steganography.file_handler import load_image
 
 
 def decode_message(image_path: str, password: Optional[str] = None) -> str:
@@ -17,7 +19,7 @@ def decode_message(image_path: str, password: Optional[str] = None) -> str:
     :return: The hidden message extracted from the image.
     :raises FileNotFoundError: If the image file is not found.
     :raises UnidentifiedImageError: If the file is not a valid image.
-    :raises ValueError: If no valid message was found.
+    :raises NoMessageFoundError: If no valid message was found.
     :raises Exception: For any other unexpected error.
     """
     image_data, _ = load_image(image_path)
@@ -41,7 +43,7 @@ def decode_message(image_path: str, password: Optional[str] = None) -> str:
 
     # If we found an empty message
     if not message_bytes:
-        raise ValueError('No valid message found in the image.')
+        raise NoMessageFoundError('No valid message found in the image.')
 
     # Decompress if its compressed
     if message_bytes.startswith(COMPRESSION_PREFIX.encode()):

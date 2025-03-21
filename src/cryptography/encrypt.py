@@ -5,6 +5,8 @@ from Crypto.Random import get_random_bytes
 
 from .derivation import derive_key_from_password
 from .password_handler import clean_password
+from ..config import SALT_SIZE_BYTE
+from ..exceptions import InvalidPasswordError
 
 
 def encrypt_data(data: bytes, password: str) -> bytes:
@@ -14,14 +16,14 @@ def encrypt_data(data: bytes, password: str) -> bytes:
     :param data: The data to encrypt.
     :param password: The password to derive the key.
     :return: The encrypted data in base64 format.
-    :raises ValueError: If the password is empty
+    :raises InvalidPasswordError: If the password is empty
     """
     password = clean_password(password)
     if password:
-        salt = get_random_bytes(16)
+        salt = get_random_bytes(SALT_SIZE_BYTE)
         key = derive_key_from_password(password, salt)
     else:
-        raise ValueError('You must provide a password.')
+        raise InvalidPasswordError('You must provide a password.')
 
     # Creating the AES-GCM cipher
     cipher = AES.new(key, AES.MODE_GCM)

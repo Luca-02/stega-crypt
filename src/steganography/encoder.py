@@ -4,10 +4,11 @@ from typing import Optional
 import numpy as np
 from PIL import Image
 
-from config import DEFAULT_OUTPUT_DIR, COMPRESSION_PREFIX, DELIMITER_SUFFIX
-from steganography.compressor import compress_message
-from utils.file_handler import load_image, load_message
-from cryptography.encrypt import encrypt_data
+from .compressor import compress_message
+from ..config import DEFAULT_OUTPUT_DIR, COMPRESSION_PREFIX, DELIMITER_SUFFIX
+from ..cryptography.encrypt import encrypt_data
+from ..exceptions import MessageTooLargeError, NoMessageFoundError
+from src.steganography.file_handler import load_image, load_message, save_image
 
 
 def __create_hidden_message(message: str, password: str, compression: bool) -> bytes:
@@ -103,7 +104,8 @@ def encode_message(
     If not specified it will be
     automatically compressed if it is convenient with respect to the weight of the compressed message.
     :raises FileNotFoundError: If the message or image file is not found.
-    :raises ValueError: If the message is empty or is too large to fit in the image.
+    :raises NoMessageFoundError: If the message is empty.
+    :raises MessageTooLargeError: If the message is too large to fit in the image.
     :raises FileExistsError: If the output file already exists.
     :raises Exception: For any other unexpected error.
     """
@@ -112,7 +114,7 @@ def encode_message(
 
     # Validate message
     if not message:
-        raise ValueError('You can\'t use an empty message.')
+        raise NoMessageFoundError('You can\'t use an empty message.')
 
     image_data, (width, height) = load_image(image_path)
 
@@ -126,7 +128,7 @@ def encode_message(
     flat_data = image_data.flatten()
 
     if len(binary_message) > len(flat_data):
-        raise ValueError(f'Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit.')
+        raise MessageTooLargeError(f'Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit.')
 
     # Add message and random noise
     __modify_lsb(flat_data, binary_message)
@@ -141,21 +143,6 @@ def encode_message(
         new_image_name = f"{base_name}-modified"
 
     # Determines the extent of the input image
-    file_extension = os.path.splitext(image_path)[1].lower().strip(".")
-    new_image_name = f"{new_image_name}.{file_extension}"
+    image_format = os.path.splitext(image_path)[1].lower().strip(".")
 
-    output_file_path = os.path.join(output_path, f"{new_image_name}")
-
-    # Check if the output file already exists
-    if os.path.isdir(output_path) and os.path.isfile(output_file_path):
-        raise FileExistsError(f'The file \'{new_image_name}\' already exists in the directory \'{output_path}\'.')
-
-    # Create and save the new image with the hidden message
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-
-    new_img = Image.fromarray(modified_data)
-    try:
-        new_img.save(output_file_path, format=file_extension.upper())
-    except Exception as e:
-        raise Exception(f'An unexpected error occurred while saving image {output_file_path}: {e}')
+    save_image(modified_data, output_path, new_image_name, image_format)
