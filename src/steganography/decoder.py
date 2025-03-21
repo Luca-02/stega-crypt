@@ -1,18 +1,20 @@
 import numpy as np
+from typing import Optional
 
 from config import DELIMITER_SUFFIX, COMPRESSION_PREFIX
-from utility.compressor import decompress_message
-from utility.file_handler import load_image
+from steganography.compressor import decompress_message
+from utils.file_handler import load_image
+from cryptography.decrypt import decrypt_message
 
 
-def decode_message(image_path: str) -> str:
+def decode_message(image_path: str, password: Optional[str] = None) -> str:
     """
     Extracts the hidden message from an image using the Least Significant Bit (LSB) technique.
 
     :param image_path: The path to the image containing the hidden message.
-
+    :param password: The password to decrypt the hidden message.
+    If not specified the message will not be decrypted.
     :return: The hidden message extracted from the image.
-
     :raises FileNotFoundError: If the image file is not found.
     :raises UnidentifiedImageError: If the file is not a valid image.
     :raises ValueError: If no valid message was found.
@@ -41,7 +43,12 @@ def decode_message(image_path: str) -> str:
     if not message_bytes:
         raise ValueError('No valid message found in the image.')
 
+    # Decompress if its compressed
     if message_bytes.startswith(COMPRESSION_PREFIX.encode()):
-        return decompress_message(message_bytes[len(COMPRESSION_PREFIX):]).decode()
+        message_bytes = decompress_message(message_bytes[len(COMPRESSION_PREFIX):])
 
-    return message_bytes.decode()
+    # Decrypt if its specified
+    if password:
+        return decrypt_message(message_bytes, password).decode()
+    else:
+        return message_bytes.decode()

@@ -4,33 +4,46 @@ from typing import Optional
 import numpy as np
 from PIL import Image
 
-from config import OUTPUT_DIR, COMPRESSION_PREFIX, DELIMITER_SUFFIX
-from utility.compressor import compress_message
-from utility.converter import bytes_to_bits_binary_list
-from utility.file_handler import load_image, load_message
+from config import DEFAULT_OUTPUT_DIR, COMPRESSION_PREFIX, DELIMITER_SUFFIX
+from steganography.compressor import compress_message
+from utils.file_handler import load_image, load_message
+from cryptography.encrypt import encrypt_data
 
 
-def __create_hidden_message(message: str, compression: bool) -> bytes:
+def __create_hidden_message(message: str, password: str, compression: bool) -> bytes:
     """
     Prepare the message to hide, with or without compression.
 
     :param message: The plaintext message.
+    :param password: If different then None, apply encryption with it.
     :param compression: If True, apply compression. If False, no compression.
     If None, automatically choose the most efficient option.
-
     :return: The message ready to be hidden in the image.
     """
-    encoded_message = message.encode() + DELIMITER_SUFFIX.encode()
+    if password:
+        data = encrypt_data(message.encode(), password)
+    else:
+        data = message.encode()
 
+    hidden_message = data + DELIMITER_SUFFIX.encode()
     if compression is False:
-        return encoded_message
+        return hidden_message
 
-    compressed_message = COMPRESSION_PREFIX.encode() + compress_message(message.encode()) + DELIMITER_SUFFIX.encode()
-
-    if compression or len(compressed_message) < len(encoded_message):
+    compressed_message = COMPRESSION_PREFIX.encode() + compress_message(data) + DELIMITER_SUFFIX.encode()
+    if compression or len(compressed_message) < len(hidden_message):
         return compressed_message
 
-    return encoded_message
+    return hidden_message
+
+
+def __bytes_to_bits_binary_list(byte_data: bytes) -> list[int]:
+    """
+    Converts a bytes object into a list of binary bits.
+
+    :param byte_data: Bytes object.
+    :return: The corresponding list of binary bits.
+    """
+    return [int(bit) for bit in ''.join(f'{byte:08b}' for byte in byte_data)]
 
 
 def __modify_lsb(flat_data: np.ndarray, b_message: list[int]) -> None:
@@ -70,8 +83,9 @@ def encode_message(
         image_path: str,
         message: Optional[str] = None,
         message_path: Optional[str] = None,
-        output_path: Optional[str] = OUTPUT_DIR,
+        output_path: Optional[str] = DEFAULT_OUTPUT_DIR,
         new_image_name: Optional[str] = None,
+        password: Optional[str] = None,
         compress: Optional[bool] = None
 ) -> None:
     """
@@ -81,12 +95,15 @@ def encode_message(
     :param message: Message to hide (if not using a text file).
     :param message_path: Path to the text file containing the message (optional).
     :param output_path: The output folder to save the modified image. Default is './.output'.
-    :param new_image_name: The name of the new image file. If not specified, '-modified' is appended to the original name.
-    :param compress: Boolean value to indicate whether to compress the message, if not specified it will be
+    :param new_image_name: The name of the new image file.
+    If not specified, '-modified' is appended to the original name.
+    :param password: The password to encrypt the hidden message.
+    If not specified the message will not be encrypted.
+    :param compress: Boolean value to indicate whether to compress the message.
+    If not specified it will be
     automatically compressed if it is convenient with respect to the weight of the compressed message.
-
-    :raises FileNotFoundError: If the image file is not found.
-    :raises ValueError: If the message is too large to fit in the image.
+    :raises FileNotFoundError: If the message or image file is not found.
+    :raises ValueError: If the message is empty or is too large to fit in the image.
     :raises FileExistsError: If the output file already exists.
     :raises Exception: For any other unexpected error.
     """
@@ -99,11 +116,11 @@ def encode_message(
 
     image_data, (width, height) = load_image(image_path)
 
-    # Add delimiter to message
-    hidden_message = __create_hidden_message(message, compress)
+    # Create the hidden message
+    hidden_message = __create_hidden_message(message, password, compress)
 
     # Convert to bit array
-    binary_message = bytes_to_bits_binary_list(hidden_message)
+    binary_message = __bytes_to_bits_binary_list(hidden_message)
 
     # Flatten the pixel arrays
     flat_data = image_data.flatten()
