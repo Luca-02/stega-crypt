@@ -3,10 +3,10 @@ from typing import Optional
 import numpy as np
 
 from src.steganography.file_handler import load_image
-from .compressor import decompress_message
-from ..config import DELIMITER_SUFFIX, COMPRESSION_PREFIX
+
+from ..config import COMPRESSION_PREFIX, DELIMITER_SUFFIX
 from ..cryptography.decrypt import decrypt_message
-from ..exceptions import NoMessageFoundError
+from .compressor import decompress_message
 
 
 def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
@@ -36,23 +36,21 @@ def __process_extracted_data(lsb_data: np.ndarray) -> bytearray:
     # Packs binary-valued array into 8-bits array.
     pack_data = np.packbits(lsb_data)
 
-    # Read and convert integers to Unicode characters until hitting a non-printable character or the delimiter
+    # Read and convert integers to Unicode characters until
+    # hitting a non-printable character or the delimiter
     delimiter_suffix_encoded = DELIMITER_SUFFIX.encode()
     message_bytes = bytearray()
     for byte in pack_data:
         message_bytes.append(byte)
 
         if message_bytes.endswith(delimiter_suffix_encoded):
-            message_bytes = message_bytes[:-len(DELIMITER_SUFFIX)]
+            message_bytes = message_bytes[: -len(DELIMITER_SUFFIX)]
             break
-
-    if not message_bytes:
-        raise NoMessageFoundError('No valid message found in the image.')
 
     # Decompress if its compressed
     compression_prefix_encoded = COMPRESSION_PREFIX.encode()
     if message_bytes.startswith(compression_prefix_encoded):
-        message_bytes = decompress_message(message_bytes[len(COMPRESSION_PREFIX):])
+        message_bytes = decompress_message(message_bytes[len(COMPRESSION_PREFIX) :])
 
     return message_bytes
 
@@ -65,7 +63,7 @@ def decode_message(image_path: str, password: Optional[str] = None) -> str:
     :param password: The password to decrypt the hidden message.
     If not specified the message will not be decrypted.
     :return: The hidden message extracted from the image.
-    :raises FileNotFoundError: If the image file is not found.
+    :raises ImageFileNotFoundError: If the image file is not found.
     :raises UnidentifiedImageError: If the file is not a valid image.
     :raises NoMessageFoundError: If no valid message was found.
     :raises Exception: For any other unexpected error.
@@ -75,7 +73,8 @@ def decode_message(image_path: str, password: Optional[str] = None) -> str:
     # Extract LSB data
     lsb_data = __extract_lsb_data(image_data)
 
-    # Read and convert integers to Unicode characters until hitting a non-printable character or the delimiter
+    # Read and convert integers to Unicode characters until
+    # hitting a non-printable character or the delimiter
     message_bytes = __process_extracted_data(lsb_data)
 
     # Decrypt if its specified

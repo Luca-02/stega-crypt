@@ -2,10 +2,10 @@ import base64
 
 from Crypto.Cipher import AES
 
-from .derivation import derive_key_from_password, generate_salt
-from .password_handler import clean_password, is_valid_password
 from ..config import SALT_SIZE_BYTE
 from ..exceptions import InvalidPasswordError
+from .derivation import derive_key_from_password, generate_salt
+from .password_handler import clean_password, is_valid_password
 
 
 def encrypt_data(data: bytes, password: str) -> bytes:
@@ -22,7 +22,7 @@ def encrypt_data(data: bytes, password: str) -> bytes:
         salt = generate_salt(SALT_SIZE_BYTE)
         key = derive_key_from_password(password, salt)
     else:
-        raise InvalidPasswordError('You must provide a password.')
+        raise InvalidPasswordError("You must provide a password.")
 
     # Creating the AES-GCM cipher
     cipher = AES.new(key, AES.MODE_GCM)

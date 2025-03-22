@@ -1,4 +1,16 @@
+class MessageFileNotFoundError(FileNotFoundError):
+    pass
+
+
+class ImageFileNotFoundError(FileNotFoundError):
+    pass
+
+
 class MessageTooLargeError(Exception):
+    pass
+
+
+class FileAlreadyExistsError(FileExistsError):
     pass
 
 

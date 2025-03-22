@@ -1,0 +1,27 @@
+[flake8]
+ignore = E501, E203, W504, W503
+max-line-length = 88
+exclude =
+    .git,
+    .hg,
+    .mypy_cache,
+    .tox,
+    .venv,
+    _build,
+    buck-out,
+    build,
+    dist,
+    venv,
+    .env,
+    *.md,
+    docs/,
+    .github/,
+    .vscode/,
+    .pytest_cache/,
+    .coverage,
+    htmlcov/,
+    *.ipynb,
+    *.json,
+    *.csv,
+    *.dat,
+    *.log

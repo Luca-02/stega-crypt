@@ -25,5 +25,5 @@ def is_valid_password(password: str) -> bool:
     if not password:
         return False
 
-    pattern = rf'^\S{{{MIN_PASSWORD_LENGTH},}}$'
+    pattern = rf"^\S{{{MIN_PASSWORD_LENGTH},}}$"
     return bool(match(pattern, password))

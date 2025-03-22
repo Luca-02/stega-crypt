@@ -1,7 +1,7 @@
 import hashlib
 import os
 
-from ..config import KEY_DERIVATION_ITERATIONS, AES_KEY_LENGTH_BYTE
+from ..config import AES_KEY_LENGTH_BYTE, KEY_DERIVATION_ITERATIONS
 
 
 def generate_salt(byte_size: int) -> bytes:
@@ -26,5 +26,5 @@ def derive_key_from_password(password: str, salt: bytes) -> bytes:
         password.encode(),
         salt,
         KEY_DERIVATION_ITERATIONS,
-        dklen=AES_KEY_LENGTH_BYTE
+        dklen=AES_KEY_LENGTH_BYTE,
     )
