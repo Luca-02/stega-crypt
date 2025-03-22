@@ -1,0 +1,61 @@
+[tool.black]
+line-length = 88
+target-version = ['py312']
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | venv
+  | \.env
+  | \.flake8
+  | \.md$
+  | docs/
+  | \.github/
+  | \.pytest_cache/
+  | \.coverage
+  | htmlcov/
+  | \.ipynb$
+  | \.json$
+  | \.csv$
+  | \.dat$
+  | \.log$
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip_gitignore = true
+py_version=312
+skip = [
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".tox",
+    ".venv",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "venv",
+    ".env",
+    "*.md",
+    "docs/",
+    ".github/",
+    ".vscode/",
+    ".pytest_cache/",
+    ".coverage",
+    "htmlcov/",
+    "*.ipynb",
+    "*.json",
+    "*.csv",
+    "*.dat",
+    "*.log"
+]

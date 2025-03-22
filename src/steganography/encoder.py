@@ -4,10 +4,11 @@ from typing import Optional
 import numpy as np
 
 from src.steganography.file_handler import load_image, load_message, save_image
-from .compressor import compress_message
-from ..config import DEFAULT_OUTPUT_DIR, COMPRESSION_PREFIX, DELIMITER_SUFFIX
+
+from ..config import COMPRESSION_PREFIX, DEFAULT_OUTPUT_DIR, DELIMITER_SUFFIX
 from ..cryptography.encrypt import encrypt_data
 from ..exceptions import MessageTooLargeError, NoMessageFoundError
+from .compressor import compress_message
 
 
 def __create_hidden_message(message: str, password: str, compression: bool) -> bytes:
@@ -29,7 +30,9 @@ def __create_hidden_message(message: str, password: str, compression: bool) -> b
     if compression is False:
         return hidden_message
 
-    compressed_message = COMPRESSION_PREFIX.encode() + compress_message(data) + DELIMITER_SUFFIX.encode()
+    compressed_message = (
+        COMPRESSION_PREFIX.encode() + compress_message(data) + DELIMITER_SUFFIX.encode()
+    )
     if compression or len(compressed_message) < len(hidden_message):
         return compressed_message
 
@@ -53,12 +56,12 @@ def __modify_lsb(flat_data: np.ndarray, b_message: np.ndarray) -> None:
     :param flat_data: Flattened NumPy array of image pixels.
     :param b_message: NumPy array of binary bits representing the message.
     """
-    target_data = flat_data[:len(b_message)]
+    target_data = flat_data[: len(b_message)]
 
     # Set the LSBs to 0 and then insert message bits
     target_data = target_data & ~np.uint8(1) | b_message
 
-    flat_data[:len(b_message)] = target_data
+    flat_data[: len(b_message)] = target_data
 
 
 def __add_noise(flat_data: np.ndarray, used_bits: int) -> None:
@@ -79,7 +82,9 @@ def __add_noise(flat_data: np.ndarray, used_bits: int) -> None:
     flat_data[used_bits:] = unused_data
 
 
-def __embed_hidden_message_in_image(image_data: np.ndarray, binary_message: np.ndarray) -> np.ndarray:
+def __embed_hidden_message_in_image(
+    image_data: np.ndarray, binary_message: np.ndarray
+) -> np.ndarray:
     """
     Embed message bits into the LSB of the image pixels adding some random noise.
 
@@ -94,7 +99,8 @@ def __embed_hidden_message_in_image(image_data: np.ndarray, binary_message: np.n
     # Check if message will fit
     if len(binary_message) > len(flat_data):
         raise MessageTooLargeError(
-            f'Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit.')
+            f"Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit."
+        )
 
     # Add message and random noise
     __modify_lsb(flat_data, binary_message)
@@ -105,13 +111,13 @@ def __embed_hidden_message_in_image(image_data: np.ndarray, binary_message: np.n
 
 
 def encode_message(
-        image_path: str,
-        message: Optional[str] = None,
-        message_path: Optional[str] = None,
-        output_path: Optional[str] = DEFAULT_OUTPUT_DIR,
-        new_image_name: Optional[str] = None,
-        password: Optional[str] = None,
-        compress: Optional[bool] = None
+    image_path: str,
+    message: Optional[str] = None,
+    message_path: Optional[str] = None,
+    output_path: Optional[str] = DEFAULT_OUTPUT_DIR,
+    new_image_name: Optional[str] = None,
+    password: Optional[str] = None,
+    compress: Optional[bool] = None,
 ) -> None:
     """
     Encodes a hidden compressed message into an image using the Least Significant Bit (LSB) technique.
@@ -127,10 +133,11 @@ def encode_message(
     :param compress: Boolean value to indicate whether to compress the message.
     If not specified it will be
     automatically compressed if it is convenient with respect to the weight of the compressed message.
-    :raises FileNotFoundError: If the message or image file is not found.
+    :raises MessageFileNotFoundError: If the message is not found.
+    :raises ImageFileNotFoundError: If the image file is not found.
     :raises NoMessageFoundError: If the message is empty.
     :raises MessageTooLargeError: If the message is too large to fit in the image.
-    :raises FileExistsError: If the output file already exists.
+    :raises FileAlreadyExistsError: If the output file already exists.
     :raises Exception: For any other unexpected error.
     """
     if message_path:
@@ -138,7 +145,7 @@ def encode_message(
 
     # Validate message
     if not message:
-        raise NoMessageFoundError('You can\'t use an empty message.')
+        raise NoMessageFoundError("You can't use an empty message.")
 
     image_data = load_image(image_path)
 

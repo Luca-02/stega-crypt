@@ -3,10 +3,10 @@ from typing import Optional
 
 from Crypto.Cipher import AES
 
+from ..config import NONCE_SIZE_BYTE, SALT_SIZE_BYTE, TAG_SIZE_BYTE
+from ..exceptions import DecryptionError, InvalidPasswordError
 from .derivation import derive_key_from_password
 from .password_handler import clean_password, is_valid_password
-from ..config import SALT_SIZE_BYTE, NONCE_SIZE_BYTE, TAG_SIZE_BYTE
-from ..exceptions import InvalidPasswordError, DecryptionError
 
 
 def decrypt_message(encrypted_data: bytes, password: Optional[str] = None) -> bytes:
@@ -24,16 +24,16 @@ def decrypt_message(encrypted_data: bytes, password: Optional[str] = None) -> by
     # Salt is the first 16 bytes
     salt = encrypted_data[:SALT_SIZE_BYTE]
     # Nonce is the next 16 bytes
-    nonce = encrypted_data[SALT_SIZE_BYTE:SALT_SIZE_BYTE + NONCE_SIZE_BYTE]
+    nonce = encrypted_data[SALT_SIZE_BYTE : SALT_SIZE_BYTE + NONCE_SIZE_BYTE]
     # Ciphertext is everything in between
-    ciphertext = encrypted_data[SALT_SIZE_BYTE + NONCE_SIZE_BYTE:-TAG_SIZE_BYTE]
+    ciphertext = encrypted_data[SALT_SIZE_BYTE + NONCE_SIZE_BYTE : -TAG_SIZE_BYTE]
     # Tag is the last 16 bytes
     tag = encrypted_data[-TAG_SIZE_BYTE:]
 
     if is_valid_password(password):
         key = derive_key_from_password(password, salt)
     else:
-        raise InvalidPasswordError('You must provide a password.')
+        raise InvalidPasswordError("You must provide a password.")
 
     # Creating the AES-GCM cipher
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
