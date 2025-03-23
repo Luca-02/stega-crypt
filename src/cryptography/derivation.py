@@ -1,7 +1,7 @@
 import hashlib
 import os
 
-from ..config import AES_KEY_LENGTH_BYTE, KEY_DERIVATION_ITERATIONS
+from src.config import AES_KEY_LENGTH_BYTE, KEY_DERIVATION_ITERATIONS
 
 
 def generate_salt(byte_size: int) -> bytes:

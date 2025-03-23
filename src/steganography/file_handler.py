@@ -59,8 +59,11 @@ def load_image(image_path: str) -> np.ndarray:
 
 
 def save_image(
-    image_data: np.ndarray, output_path: str, image_name: str, image_format: str
-):
+    image_data: np.ndarray,
+    output_path: str,
+    image_name: str,
+    image_format: str,
+) -> str:
     """
     Save an image to the specified path.
 
@@ -87,6 +90,7 @@ def save_image(
 
         new_img = Image.fromarray(image_data)
         new_img.save(output_file_path, format=image_format)
+        return output_file_path
     except Exception as e:
         raise Exception(
             f"An unexpected error occurred while saving image {output_file_path}: {e}"

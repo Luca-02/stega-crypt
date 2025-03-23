@@ -15,4 +15,4 @@ NONCE_SIZE_BYTE = 16
 TAG_SIZE_BYTE = 16
 
 # Steganography settings
-MIN_PASSWORD_LENGTH: int = 4
+MIN_PASSWORD_LENGTH = 4

@@ -1,4 +1,6 @@
+ROOT_DIR := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 PYTHON := python
+VENV_DIR := .venv
 PIP := $(PYTHON) -m pip
 PYTEST := pytest
 PYTEST_COV := pytest-cov
@@ -6,21 +8,33 @@ BLACK := black
 ISORT := isort
 FLAKE8 := flake8
 PRE_COMMIT := pre-commit
-COV_REPORT := --cov --junitxml=junit.xml
 
 # Install dependencies
 install:
 	$(PIP) install --upgrade pip
-	$(PIP) install $(DOC) $(PYTEST) $(PYTEST_COV) $(BLACK) $(ISORT) $(FLAKE8) $(PRE_COMMIT)
+	$(PIP) install $(PYTEST) $(PYTEST_COV) $(BLACK) $(ISORT) $(FLAKE8) $(PRE_COMMIT)
 	$(PIP) install -r requirements.txt
+
+# Install pre-commit hooks
+pre-commit-install:
+	$(PRE_COMMIT) install
 
 # Run pre-commit hooks
 pre-commit:
 	$(PRE_COMMIT) run --all-files
 
-# Run tests with coverage
+# Run tests with coverage, html output file
 test:
-	$(PYTEST) $(COV_REPORT)
+	$(PYTEST) --cov
+
+# Run tests with coverage, html output file
+test-report:
+	$(PYTEST) --cov --cov-report=html
+	@echo Report saved at file:///$(CURDIR)/htmlcov/index.html
+
+# Run tests with coverage for codecov for CI pipeline
+codecov-test:
+	$(PYTEST) --cov --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
 
 # Format code with Black and isort
 format:

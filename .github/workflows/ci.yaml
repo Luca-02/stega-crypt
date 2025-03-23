@@ -2,31 +2,45 @@ name: CI build
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - main
+      - develop
   pull_request:
-    branches: [ main, develop ]
+    branches:
+      - "*"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ 3.9, "3.10", "3.11", "3.12" ]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: make install
 
+      - name: Run lint and format checks
+        run: make check
+
       - name: Run tests and generate coverage report
-        run: make test
+        run: make codecov-test
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
+          fail_ci_if_error: true
+          flags: unittests
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results to Codecov

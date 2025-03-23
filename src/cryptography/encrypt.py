@@ -2,10 +2,10 @@ import base64
 
 from Crypto.Cipher import AES
 
-from ..config import SALT_SIZE_BYTE
-from ..exceptions import InvalidPasswordError
-from .derivation import derive_key_from_password, generate_salt
-from .password_handler import clean_password, is_valid_password
+from src.config import SALT_SIZE_BYTE
+from src.cryptography.derivation import derive_key_from_password, generate_salt
+from src.cryptography.password_handler import clean_password, is_valid_password
+from src.exceptions import InvalidPasswordError
 
 
 def encrypt_data(data: bytes, password: str) -> bytes:

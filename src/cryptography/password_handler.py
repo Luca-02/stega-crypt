@@ -1,6 +1,6 @@
 from re import match
 
-from ..config import MIN_PASSWORD_LENGTH
+from src.config import MIN_PASSWORD_LENGTH
 
 
 def clean_password(password: str) -> str:
