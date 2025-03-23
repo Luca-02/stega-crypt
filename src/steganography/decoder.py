@@ -50,7 +50,9 @@ def __process_extracted_data(lsb_data: np.ndarray) -> bytearray:
     # Decompress if its compressed
     compression_prefix_encoded = COMPRESSION_PREFIX.encode()
     if message_bytes.startswith(compression_prefix_encoded):
-        message_bytes = decompress_message(message_bytes[len(COMPRESSION_PREFIX) :])
+        message_bytes = decompress_message(
+            message_bytes[len(COMPRESSION_PREFIX) :]
+        )
 
     return message_bytes
 

@@ -9,7 +9,9 @@ from .derivation import derive_key_from_password
 from .password_handler import clean_password, is_valid_password
 
 
-def decrypt_message(encrypted_data: bytes, password: Optional[str] = None) -> bytes:
+def decrypt_message(
+    encrypted_data: bytes, password: Optional[str] = None
+) -> bytes:
     """
     Decrypts encrypted data using a password or key from a file.
 
@@ -26,7 +28,9 @@ def decrypt_message(encrypted_data: bytes, password: Optional[str] = None) -> by
     # Nonce is the next 16 bytes
     nonce = encrypted_data[SALT_SIZE_BYTE : SALT_SIZE_BYTE + NONCE_SIZE_BYTE]
     # Ciphertext is everything in between
-    ciphertext = encrypted_data[SALT_SIZE_BYTE + NONCE_SIZE_BYTE : -TAG_SIZE_BYTE]
+    ciphertext_bottom = SALT_SIZE_BYTE + NONCE_SIZE_BYTE
+    ciphertext_upper = -TAG_SIZE_BYTE
+    ciphertext = encrypted_data[ciphertext_bottom:ciphertext_upper]
     # Tag is the last 16 bytes
     tag = encrypted_data[-TAG_SIZE_BYTE:]
 
@@ -42,4 +46,6 @@ def decrypt_message(encrypted_data: bytes, password: Optional[str] = None) -> by
     try:
         return cipher.decrypt_and_verify(ciphertext, tag)
     except ValueError:
-        raise DecryptionError("Decryption error: incorrect key or corrupted data.")
+        raise DecryptionError(
+            "Decryption error: incorrect key or corrupted data."
+        )

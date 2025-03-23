@@ -22,11 +22,14 @@ jobs:
         run: make install
 
       - name: Run tests and generate coverage report
-        run: make test
+        run: make codecov-test
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
+          fail_ci_if_error: true
+          flags: unittests
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results to Codecov
