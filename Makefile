@@ -4,12 +4,17 @@
 VENV_DIR := .venv
 VENV_BIN := $(VENV_DIR)/bin
 PIP := $(VENV_BIN)/pip
+ENTRY_POINT := main.py
 PYTEST := pytest
 PYTEST_COV := pytest-cov
 BLACK := black
 ISORT := isort
 FLAKE8 := flake8
 PRE_COMMIT := pre-commit
+
+run:
+	@echo "==> Running the application..."
+	$(VENV_BIN)/python $(ENTRY_POINT) $(ARGS)
 
 init:
 	@echo "==> Initialize virtualenv..."
@@ -20,9 +25,11 @@ init:
 	touch $(VENV_DIR)
 
 pre-commit-install:
+	@echo "==> Installing pre-commit hooks..."
 	$(VENV_BIN)/$(PRE_COMMIT) install
 
 pre-commit:
+	@echo "==> Running pre-commit hooks..."
 	$(VENV_BIN)/$(PRE_COMMIT) run --all-files
 
 test:

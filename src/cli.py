@@ -1,8 +1,8 @@
 import click
 
-from exceptions import InvalidPasswordError
 from src.config import DEFAULT_OUTPUT_DIR
-from steganography.encoder import encode_message
+from src.exceptions import InvalidPasswordError
+from src.steganography.encoder import encode_message
 
 
 @click.group()
@@ -54,7 +54,18 @@ def cli():
     is_flag=True,
     help="Encrypt the message before embedding it.",
 )
-# TODO add verbosity, add a logger to all functionalities
+@click.option(
+    "-v",
+    "--verbosity",
+    count=True,
+    help="""
+    Increase output verbosity.
+    Verbosity levels:
+        - Default (no flag): WARNING level logs
+        - -v: INFO level logs
+        - -vv or more: DEBUG level logs
+    """,
+)
 def encode(
     image_path: str,
     message: str,
@@ -87,7 +98,3 @@ def encode(
         click.echo(f"Message embedded successfully into {new_image_path}")
     except Exception as e:
         click.secho(f"Error! {e}", err=True, fg="red")
-
-
-if __name__ == "__main__":
-    cli()

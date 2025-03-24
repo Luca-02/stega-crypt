@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from src.config import COMPRESSION_PREFIX, DEFAULT_OUTPUT_DIR, DELIMITER_SUFFIX
+from src.config import DEFAULT_OUTPUT_DIR, DELIMITER_SUFFIX
 from src.cryptography.encrypt import encrypt_data
 from src.exceptions import (
     InputMessageConflictError,
@@ -25,7 +25,6 @@ def __create_hidden_message(
     :param message: The plaintext message.
     :param password: If different then None, apply encryption with it.
     :param compression: If True, apply compression if it's convenient.
-    If False, no compression.
     :return: The message ready to be hidden in the image.
     """
     if password:
@@ -33,19 +32,13 @@ def __create_hidden_message(
     else:
         data = message.encode()
 
-    hidden_message = data + DELIMITER_SUFFIX.encode()
+    hidden_message: bytes
     if compression is False:
-        return hidden_message
+        hidden_message = data
+    else:
+        hidden_message = compress_message(data)
 
-    compressed_message = (
-        COMPRESSION_PREFIX.encode()
-        + compress_message(data)
-        + DELIMITER_SUFFIX.encode()
-    )
-    if len(compressed_message) < len(hidden_message):
-        return compressed_message
-
-    return hidden_message
+    return hidden_message + DELIMITER_SUFFIX.encode()
 
 
 def __bytes_to_bits_binary_list(byte_data: bytes) -> np.ndarray:

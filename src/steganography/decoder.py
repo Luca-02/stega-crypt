@@ -2,10 +2,10 @@ from typing import Optional
 
 import numpy as np
 
-from ..config import COMPRESSION_PREFIX, DELIMITER_SUFFIX
-from ..cryptography.decrypt import decrypt_message
-from ..steganography.file_handler import load_image
-from .compressor import decompress_message
+from src.config import DELIMITER_SUFFIX
+from src.cryptography.decrypt import decrypt_message
+from src.steganography.compressor import decompress_message
+from src.steganography.file_handler import load_image
 
 
 def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
@@ -24,7 +24,7 @@ def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
     return lsb_bits
 
 
-def __process_extracted_data(lsb_data: np.ndarray) -> bytearray:
+def __process_extracted_data(lsb_data: np.ndarray) -> bytes:
     """
     Process extracted data retrieving the hidden data, handling
     compression if present.
@@ -48,13 +48,7 @@ def __process_extracted_data(lsb_data: np.ndarray) -> bytearray:
             break
 
     # Decompress if its compressed
-    compression_prefix_encoded = COMPRESSION_PREFIX.encode()
-    if message_bytes.startswith(compression_prefix_encoded):
-        message_bytes = decompress_message(
-            message_bytes[len(COMPRESSION_PREFIX) :]
-        )
-
-    return message_bytes
+    return decompress_message(message_bytes)
 
 
 def decode_message(
