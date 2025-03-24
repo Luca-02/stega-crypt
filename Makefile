@@ -1,7 +1,9 @@
-ROOT_DIR := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
-PYTHON := python
+# Linux based commands.
+# With wsl on windows run 'ubuntu run' before running any commands
+
 VENV_DIR := .venv
-PIP := $(PYTHON) -m pip
+VENV_BIN := $(VENV_DIR)/bin
+PIP := $(VENV_BIN)/pip
 PYTEST := pytest
 PYTEST_COV := pytest-cov
 BLACK := black
@@ -9,44 +11,41 @@ ISORT := isort
 FLAKE8 := flake8
 PRE_COMMIT := pre-commit
 
-# Install dependencies
-install:
-	$(PIP) install --upgrade pip
+init:
+	@echo "==> Initialize virtualenv..."
+	python -m venv $(VENV_DIR)
+	@echo "==> Installing dependencies..."
 	$(PIP) install $(PYTEST) $(PYTEST_COV) $(BLACK) $(ISORT) $(FLAKE8) $(PRE_COMMIT)
 	$(PIP) install -r requirements.txt
+	touch $(VENV_DIR)
 
-# Install pre-commit hooks
 pre-commit-install:
-	$(PRE_COMMIT) install
+	$(VENV_BIN)/$(PRE_COMMIT) install
 
-# Run pre-commit hooks
 pre-commit:
-	$(PRE_COMMIT) run --all-files
+	$(VENV_BIN)/$(PRE_COMMIT) run --all-files
 
-# Run tests with coverage, html output file
 test:
-	$(PYTEST) --cov
+	@echo "==> Running tests with coverage..."
+	$(VENV_BIN)/$(PYTEST) --cov src
 
-# Run tests with coverage, html output file
 test-report:
-	$(PYTEST) --cov --cov-report=html
-	@echo Report saved at file:///$(CURDIR)/htmlcov/index.html
+	@echo "==> Running tests with coverage html output file..."
+	$(VENV_BIN)/$(PYTEST) --cov src --cov-report=html
 
-# Run tests with coverage for codecov for CI pipeline
 codecov-test:
-	$(PYTEST) --cov --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
+	@echo "==> Run tests with coverage for codecov for CI pipeline..."
+	$(VENV_BIN)/$(PYTEST) --cov src --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
 
-# Format code with Black and isort
-format:
-	$(BLACK) . --check
-	$(ISORT) . --check-only
-
-# Lint code with flake8
 lint:
-	$(FLAKE8) --config=.flake8
+	@echo "==> Lint code with flake8..."
+	$(VENV_BIN)/$(FLAKE8) --config=.flake8
 
-# Run all checks (lint and format)
+format:
+	@echo "==> Check code with black and isort..."
+	$(VENV_BIN)/$(BLACK) . --check
+	$(VENV_BIN)/$(ISORT) . --check-only
+
 check: lint format
 
-# Run all checks including tests
 full-check: check test

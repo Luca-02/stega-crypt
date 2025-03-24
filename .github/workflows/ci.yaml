@@ -26,8 +26,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: make install
+      - name: Initialize the environment and install dependencies
+        run: make init
 
       - name: Run lint and format checks
         run: make check
