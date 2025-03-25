@@ -8,6 +8,7 @@ from src.exceptions import (
     ImageFileNotFoundError,
     MessageFileNotFoundError,
 )
+from src.logger import logger
 
 
 def load_message(message_path: str) -> str:
@@ -18,13 +19,20 @@ def load_message(message_path: str) -> str:
     :return: The message data as a string.
     :raises MessageFileNotFoundError: If the message file does not exist.
     """
+    logger.info(f"Loading message from file: {message_path}")
+
     try:
         with open(message_path, "r") as text:
             message = text.read()
+
+        logger.debug(
+            f"Message loaded successfully: length={len(message)} characters"
+        )
         return message
+
     except FileNotFoundError:
         raise MessageFileNotFoundError(
-            f"The file '{message_path}' was not found. Please verify the path."
+            f"The file '{message_path}' was not found, please verify the path."
         )
     except Exception as e:
         raise Exception(
@@ -41,12 +49,20 @@ def load_image(image_path: str) -> np.ndarray:
     :raises ImageFileNotFoundError: If the image file does not exist.
     :raises UnidentifiedImageError: If the image file is invalid or corrupted.
     """
+    logger.info(f"Loading image: {image_path}")
+
     try:
         with Image.open(image_path) as img:
-            return np.array(img)
+            image_array = np.array(img)
+            logger.debug(
+                f"Image loaded successfully: "
+                f"shape={image_array.shape}, type={image_array.dtype}"
+            )
+            return image_array
+
     except FileNotFoundError:
         raise ImageFileNotFoundError(
-            f"The file '{image_path}' was not found. Please verify the path."
+            f"The file '{image_path}' was not found, please verify the path."
         )
     except UnidentifiedImageError:
         raise UnidentifiedImageError(
@@ -77,6 +93,8 @@ def save_image(
     new_image = f"{image_name}.{image_format}"
     output_file_path = os.path.join(output_path, f"{new_image}")
 
+    logger.info(f"Saving image: {output_file_path}")
+
     # Check if the output file already exists
     if os.path.isdir(output_path) and os.path.isfile(output_file_path):
         raise FileAlreadyExistsError(
@@ -86,11 +104,15 @@ def save_image(
     try:
         # Create and save the new image with the hidden message
         if not os.path.exists(output_path):
+            logger.debug(f"Creating output directory: {output_path}")
             os.makedirs(output_path)
 
         new_img = Image.fromarray(image_data)
         new_img.save(output_file_path, format=image_format)
+
+        logger.info(f"Image saved successfully: {output_file_path}")
         return output_file_path
+
     except Exception as e:
         raise Exception(
             f"An unexpected error occurred while saving image {output_file_path}: {e}"

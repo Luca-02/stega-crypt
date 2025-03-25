@@ -2,6 +2,7 @@ import click
 
 from src.config import DEFAULT_OUTPUT_DIR
 from src.exceptions import InvalidPasswordError
+from src.logger import setup_logger
 from src.steganography.encoder import encode_message
 
 
@@ -36,7 +37,6 @@ def cli():
     "-i",
     "--image-name",
     required=False,
-    type=click.STRING,
     show_default="<original-image>-modified",
     help="Name of the new image file with the hidden message.",
 )
@@ -57,14 +57,9 @@ def cli():
 @click.option(
     "-v",
     "--verbosity",
+    required=False,
     count=True,
-    help="""
-    Increase output verbosity.
-    Verbosity levels:
-        - Default (no flag): WARNING level logs
-        - -v: INFO level logs
-        - -vv or more: DEBUG level logs
-    """,
+    help="Increase output verbosity",
 )
 def encode(
     image_path: str,
@@ -74,11 +69,19 @@ def encode(
     image_name: str,
     compress: bool,
     encrypt: bool,
+    verbosity,
 ):
+    logger = setup_logger(verbosity)
+
     try:
+        logger.info(
+            f"Starting message encoding process for image: {image_path}"
+        )
+
         password = None
         if encrypt:
-            password = click.prompt("Password: ", hide_input=True)
+            logger.info("Encryption requested. Prompting for password.")
+            password = click.prompt("Password", hide_input=True)
             confirm_password = click.prompt(
                 "Confirm password", hide_input=True
             )
@@ -95,6 +98,8 @@ def encode(
             compress=compress,
             password=password,
         )
-        click.echo(f"Message embedded successfully into {new_image_path}")
+        click.secho(
+            f"Message embedded successfully into {new_image_path}", fg="green"
+        )
     except Exception as e:
-        click.secho(f"Error! {e}", err=True, fg="red")
+        click.secho(f"Error: {e}", err=True, fg="red")

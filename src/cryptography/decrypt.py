@@ -7,6 +7,7 @@ from src.config import NONCE_SIZE_BYTE, SALT_SIZE_BYTE, TAG_SIZE_BYTE
 from src.cryptography.derivation import derive_key_from_password
 from src.cryptography.password_handler import clean_password, is_valid_password
 from src.exceptions import DecryptionError, InvalidPasswordError
+from src.logger import logger
 
 
 def decrypt_message(
@@ -21,6 +22,8 @@ def decrypt_message(
     :return: The decrypted message.
     :raises InvalidPasswordError: If the password is empty or decryption fails.
     """
+    logger.info("Decryption procedure begins")
+
     password = clean_password(password)
     encrypted_data = base64.b64decode(encrypted_data)
 
@@ -35,17 +38,30 @@ def decrypt_message(
     # Tag is the last 16 bytes
     tag = encrypted_data[-TAG_SIZE_BYTE:]
 
-    if is_valid_password(password):
-        key = derive_key_from_password(password, salt)
-    else:
-        raise InvalidPasswordError("You must provide a password.")
+    logger.debug(
+        f"Decryption data: "
+        f"salt={len(salt)} byte, "
+        f"nonce={len(nonce)} byte, "
+        f"ciphertext={len(ciphertext)} byte, "
+        f"tag={len(tag)} byte"
+    )
 
-    # Creating the AES-GCM cipher
-    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
-
-    # Decrypt and verify integrity
     try:
-        return cipher.decrypt_and_verify(ciphertext, tag)
+        if is_valid_password(password):
+            logger.debug("Password validated, key derivation in progress")
+            key = derive_key_from_password(password, salt)
+        else:
+            raise InvalidPasswordError("You must provide a password.")
+
+        # Creating the AES-GCM cipher
+        cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+
+        # Decrypt and verify integrity
+        decrypted_data = cipher.decrypt_and_verify(ciphertext, tag)
+        logger.info("Message decryption completed successfully")
+
+        return decrypted_data
+
     except ValueError:
         raise DecryptionError(
             "Decryption error: incorrect key or corrupted data."

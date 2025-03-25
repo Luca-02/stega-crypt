@@ -1,5 +1,8 @@
 import os
 
+# Project name
+PROJECT_NAME = "stega-crypt"
+
 # Project directories
 DEFAULT_OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
 
