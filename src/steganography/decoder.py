@@ -1,12 +1,13 @@
+import os
 from typing import Optional
 
 import numpy as np
 
-from src.config import DELIMITER_SUFFIX
+from src.config import DEFAULT_OUTPUT_DIR, DELIMITER_SUFFIX
 from src.cryptography.decrypt import decrypt_message
 from src.logger import logger
 from src.steganography.compressor import decompress_message
-from src.steganography.file_handler import load_image
+from src.steganography.file_handler import load_image, save_message
 
 
 def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
@@ -58,12 +59,19 @@ def __process_extracted_data(lsb_data: np.ndarray) -> bytes:
 
 def decode_message(
     image_path: str,
+    save: Optional[bool] = False,
+    output_path: Optional[str] = DEFAULT_OUTPUT_DIR,
+    message_name: Optional[str] = None,
     password: Optional[str] = None,
 ) -> str:
     """
     Extracts the hidden message from an image using the Least Significant Bit (LSB) technique.
 
     :param image_path: The path to the image containing the hidden message.
+    :param save: The flag that specify if they must save the message to a file.
+    :param output_path: The output folder to save the message. Default is the current path.
+    :param message_name: The name of the message file.
+    If not specified, it will be '<image_name>-message'.
     :param password: The password to decrypt the hidden message.
     If not specified the message will not be decrypted.
     :return: The hidden message extracted from the image.
@@ -89,7 +97,19 @@ def decode_message(
     # Decrypt if its specified
     if password:
         logger.info("Decrypting message")
-        return decrypt_message(message_bytes, password).decode()
+        message = decrypt_message(message_bytes, password).decode()
     else:
         logger.info("No password provided, decoding without decryption")
-        return message_bytes.decode()
+        message = message_bytes.decode()
+
+    # Determine file name if not specified
+    if message_name is None:
+        base_name = os.path.splitext(os.path.basename(image_path))[0]
+        message_name = f"{base_name}-message"
+
+    # Save message if output_path specified
+    if save:
+        logger.info(f"Saving message: {message_name}.txt")
+        return save_message(message, output_path, message_name)
+    else:
+        return message

@@ -46,13 +46,13 @@ def decrypt_message(
         f"tag={len(tag)} byte"
     )
 
-    try:
-        if is_valid_password(password):
-            logger.debug("Password validated, key derivation in progress")
-            key = derive_key_from_password(password, salt)
-        else:
-            raise InvalidPasswordError("You must provide a password.")
+    if is_valid_password(password):
+        logger.debug("Password validated, key derivation in progress")
+        key = derive_key_from_password(password, salt)
+    else:
+        raise InvalidPasswordError("You must provide a password.")
 
+    try:
         # Creating the AES-GCM cipher
         cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
 
@@ -61,7 +61,6 @@ def decrypt_message(
         logger.info("Message decryption completed successfully")
 
         return decrypted_data
-
     except ValueError:
         raise DecryptionError(
             "Decryption error: incorrect key or corrupted data."

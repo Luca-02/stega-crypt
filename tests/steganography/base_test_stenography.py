@@ -11,6 +11,11 @@ class BaseTestSteganography(TestCase):
         self.message_path = os.path.join(self.dir.name, "message.txt")
         self.image_path = os.path.join(self.dir.name, "img.png")
         self.output_path = os.path.join(self.dir.name, "test_output_dir")
+        self.image_name = os.path.join(self.output_path, "encoded_image")
+        self.encoded_image_path = os.path.join(
+            self.output_path, f"{self.image_name}.png"
+        )
+        self.message_name = os.path.join(self.output_path, "decoded_message")
         self.message = "Hello World!"
         self.long_message = """
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod

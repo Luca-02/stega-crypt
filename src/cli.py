@@ -80,7 +80,7 @@ def encode(
 
         password = None
         if encrypt:
-            logger.info("Encryption requested. Prompting for password.")
+            logger.info("Encryption requested, prompting for password.")
             password = click.prompt("Password", hide_input=True)
             confirm_password = click.prompt(
                 "Confirm password", hide_input=True

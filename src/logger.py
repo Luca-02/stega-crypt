@@ -4,12 +4,29 @@ import sys
 from src.config import LOG_FORMAT, PROJECT_NAME
 
 
+def __get_verbosity(verbosity: int) -> int:
+    """
+    Get logging level based on verbosity:
+        - 0: NOT_SET,
+        - 1: INFO,
+        - >=2: DEBUG
+
+    :param verbosity: Verbosity level
+    :return: Logging level
+    """
+    if verbosity == 0:
+        return logging.NOTSET
+    elif verbosity == 1:
+        return logging.INFO
+    elif verbosity >= 2:
+        return logging.DEBUG
+
+
 def setup_logger(verbosity: int = 0):
     """
     Set up a logger with configurable verbosity levels.
 
     :param verbosity: Verbosity level
-    (0: NOT_SET, 1: INFO, >=2: DEBUG)
     :return: Configured logger
     """
     # Create a logger
@@ -27,12 +44,8 @@ def setup_logger(verbosity: int = 0):
     my_logger.addHandler(console_handler)
 
     # Set logging level based on verbosity
-    if verbosity == 0:
-        my_logger.setLevel(logging.NOTSET)
-    elif verbosity == 1:
-        my_logger.setLevel(logging.INFO)
-    elif verbosity >= 2:
-        my_logger.setLevel(logging.DEBUG)
+    level = __get_verbosity(verbosity)
+    my_logger.setLevel(level)
 
     return my_logger
 

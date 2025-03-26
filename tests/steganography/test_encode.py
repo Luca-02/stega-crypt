@@ -38,7 +38,7 @@ class Test(BaseTestSteganography):
                 image_path=self.image_path,
                 message="A" * (self.img_size[0] ** 2 * 2),
                 output_path=self.output_path,
-                image_name="encoded_image",
+                image_name=self.image_name,
                 password=self.password,
                 compress=True,
             )
@@ -92,7 +92,7 @@ class Test(BaseTestSteganography):
             image_path=self.image_path,
             message=self.message,
             output_path=self.output_path,
-            image_name="encoded_image",
+            image_name=self.image_name,
         )
 
         with self.assertRaises(FileAlreadyExistsError):
@@ -100,7 +100,7 @@ class Test(BaseTestSteganography):
                 image_path=self.image_path,
                 message=self.message,
                 output_path=self.output_path,
-                image_name="encoded_image",
+                image_name=self.image_name,
             )
 
     def test_encode_invalid_output_path_error(self):
