@@ -1,5 +1,6 @@
 # Linux based commands.
-# With wsl on windows run 'ubuntu run' before running any commands
+# With wsl on windows run 'ubuntu run'
+# before running any make commands.
 
 VENV_DIR := .venv
 VENV_BIN := $(VENV_DIR)/bin
@@ -23,6 +24,10 @@ init:
 	$(PIP) install $(PYTEST) $(PYTEST_COV) $(BLACK) $(ISORT) $(FLAKE8) $(PRE_COMMIT)
 	$(PIP) install -r requirements.txt
 	touch $(VENV_DIR)
+
+clear-venv:
+	@echo "==> Remove virtualenv."
+	rm -r $(VENV_DIR)
 
 pre-commit-install:
 	@echo "==> Installing pre-commit hooks..."

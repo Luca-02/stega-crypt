@@ -2,9 +2,15 @@ from typing import Optional
 
 import click
 
-from src.config import ABOUT_PROJECT, DEFAULT_OUTPUT_DIR
+from src.config import (
+    ABOUT_PROJECT,
+    DEFAULT_OUTPUT_DIR,
+    MESSAGE_NAME_SUFFIX,
+    MODIFIED_IMAGE_SUFFIX,
+)
 from src.exceptions import InvalidPasswordError
 from src.logger import logger, setup_logger
+from src.steganography.decoder import decode_message
 from src.steganography.encoder import encode_message
 
 
@@ -58,7 +64,7 @@ def about():
     help="Path of .txt file for the message to hide into the image.",
 )
 @click.option(
-    "-o",
+    "-op",
     "--output-path",
     required=False,
     default=DEFAULT_OUTPUT_DIR,
@@ -66,10 +72,10 @@ def about():
     help="Output folder to save the modified image.",
 )
 @click.option(
-    "-i",
+    "-in",
     "--image-name",
     required=False,
-    show_default="<original-image>-modified",
+    show_default=f"<original-image>{MODIFIED_IMAGE_SUFFIX}",
     help="Name of the new image file with the hidden message.",
 )
 @click.option(
@@ -116,5 +122,74 @@ def encode(
         click.secho(
             f"Message embedded successfully into {new_image_path}", fg="green"
         )
+    except Exception as e:
+        click.secho(f"Error: {e}", err=True, fg="red")
+
+
+@cli.command()
+@click.argument("image_path")
+@click.option(
+    "-op",
+    "--output-path",
+    required=False,
+    default=DEFAULT_OUTPUT_DIR,
+    show_default="current path",
+    help="Output folder to save the message text.",
+)
+@click.option(
+    "-mn",
+    "--message-name",
+    required=False,
+    show_default=f"<image_name>{MESSAGE_NAME_SUFFIX}",
+    help="Name of the message text file to save into the output path.",
+)
+@click.option(
+    "-sm",
+    "--save-message",
+    required=False,
+    is_flag=True,
+    help="Save the extracted message into a file into the specified output path.",
+)
+@click.option(
+    "-d",
+    "--decrypt",
+    required=False,
+    is_flag=True,
+    help="Decrypt the hidden message.",
+)
+def decode(
+    image_path: str,
+    output_path: Optional[str],
+    message_name: Optional[str],
+    save_message: bool,
+    decrypt: bool,
+):
+    try:
+        logger.info(
+            f"Starting message decoding process for image: {image_path}"
+        )
+
+        password = None
+        if decrypt:
+            password = __request_password()
+
+        decoded_message = decode_message(
+            image_path=image_path,
+            output_path=output_path,
+            message_name=message_name,
+            save_message=save_message,
+            password=password,
+        )
+
+        if save_message:
+            click.secho(
+                f"Message saved successfully into {output_path}/{message_name}",
+                fg="green",
+            )
+        else:
+            click.secho(
+                f"Message decoded successfully: \n{decoded_message}",
+                fg="green",
+            )
     except Exception as e:
         click.secho(f"Error: {e}", err=True, fg="red")

@@ -28,18 +28,16 @@ class Test(BaseTestSteganography):
         )
         decode_message(
             self.encoded_image_path,
-            save=True,
             output_path=self.output_path,
-            message_name=self.message_name,
+            save_message=True,
             password=self.password,
         )
 
         with self.assertRaises(FileAlreadyExistsError):
             decode_message(
                 self.encoded_image_path,
-                save=True,
                 output_path=self.output_path,
-                message_name=self.message_name,
+                save_message=True,
                 password=self.password,
             )
 
@@ -56,8 +54,8 @@ class Test(BaseTestSteganography):
         with self.assertRaises(Exception):
             decode_message(
                 self.encoded_image_path,
-                save=True,
                 output_path="\x00",
                 message_name=self.message_name,
+                save_message=True,
                 password=self.password,
             )

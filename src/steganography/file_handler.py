@@ -19,7 +19,7 @@ def __ensure_file_doesnt_exists(output_path: str, file_name: str):
     """
     if os.path.isdir(output_path) and os.path.isfile(file_name):
         raise FileAlreadyExistsError(
-            f"The file '{file_name}' already exists in the directory '{output_path}'."
+            f'The file "{file_name}" already exists in the directory "{output_path}".'
         )
 
 
@@ -32,7 +32,7 @@ def __ensure_directory_exists(directory: str):
         os.makedirs(directory)
 
 
-def load_message(message_path: str) -> str:
+def load_message_file(message_path: str) -> str:
     """
     Load a text file containing the message and return the message text.
 
@@ -52,7 +52,7 @@ def load_message(message_path: str) -> str:
         return message
     except FileNotFoundError:
         raise MessageFileNotFoundError(
-            f"The file '{message_path}' was not found, please verify the path."
+            f'The file "{message_path}" was not found, please verify the path.'
         )
     except Exception as e:
         raise Exception(
@@ -60,7 +60,7 @@ def load_message(message_path: str) -> str:
         )
 
 
-def save_message(
+def save_message_file(
     message: str,
     output_path: str,
     file_name: str,
@@ -94,7 +94,7 @@ def save_message(
         )
 
 
-def load_image(image_path: str) -> np.ndarray:
+def load_image_file(image_path: str) -> np.ndarray:
     """
     Load an image and return the image data.
 
@@ -116,11 +116,11 @@ def load_image(image_path: str) -> np.ndarray:
 
     except FileNotFoundError:
         raise ImageFileNotFoundError(
-            f"The file '{image_path}' was not found, please verify the path."
+            f'The file "{image_path}" was not found, please verify the path.'
         )
     except UnidentifiedImageError:
         raise UnidentifiedImageError(
-            f"The file '{image_path}' is not a valid image or is corrupt."
+            f'The file "{image_path}" is not a valid image or is corrupt.'
         )
     except Exception as e:
         raise Exception(
@@ -128,7 +128,7 @@ def load_image(image_path: str) -> np.ndarray:
         )
 
 
-def save_image(
+def save_image_file(
     image_data: np.ndarray,
     output_path: str,
     file_name: str,

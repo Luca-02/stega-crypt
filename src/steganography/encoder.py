@@ -3,7 +3,11 @@ from typing import Optional
 
 import numpy as np
 
-from src.config import DEFAULT_OUTPUT_DIR, DELIMITER_SUFFIX
+from src.config import (
+    DEFAULT_OUTPUT_DIR,
+    DELIMITER_SUFFIX,
+    MODIFIED_IMAGE_SUFFIX,
+)
 from src.cryptography.encrypt import encrypt_data
 from src.exceptions import (
     InputMessageConflictError,
@@ -12,7 +16,11 @@ from src.exceptions import (
 )
 from src.logger import logger
 from src.steganography.compressor import compress_message
-from src.steganography.file_handler import load_image, load_message, save_image
+from src.steganography.file_handler import (
+    load_image_file,
+    load_message_file,
+    save_image_file,
+)
 
 
 def __create_hidden_message(
@@ -174,7 +182,7 @@ def encode_message(
 
     if message_path:
         logger.info(f"Loading message from file: {message_path}")
-        message = load_message(message_path)
+        message = load_message_file(message_path)
 
     # Validate message
     if not message:
@@ -182,7 +190,7 @@ def encode_message(
 
     logger.info(f"Message loaded: {len(message)} characters")
 
-    image_data = load_image(image_path)
+    image_data = load_image_file(image_path)
     logger.debug(
         f"Image loaded: shape={image_data.shape}, type={image_data.dtype}"
     )
@@ -202,10 +210,12 @@ def encode_message(
     # If the modified image name is not specified, add "-modified" to the original name
     if image_name is None:
         base_name = os.path.splitext(os.path.basename(image_path))[0]
-        image_name = f"{base_name}-modified"
+        image_name = f"{base_name}{MODIFIED_IMAGE_SUFFIX}"
 
     # Determines the extent of the input image
     image_format = os.path.splitext(image_path)[1].lower().strip(".")
 
     logger.info(f"Saving modified image: {image_name}.{image_format}")
-    return save_image(modified_image, output_path, image_name, image_format)
+    return save_image_file(
+        modified_image, output_path, image_name, image_format
+    )

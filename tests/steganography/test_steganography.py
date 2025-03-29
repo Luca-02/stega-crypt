@@ -2,7 +2,7 @@ import os
 
 from src.steganography.decoder import decode_message
 from src.steganography.encoder import encode_message
-from src.steganography.file_handler import load_message
+from src.steganography.file_handler import load_message_file
 from tests.steganography.base_test_stenography import BaseTestSteganography
 
 
@@ -60,12 +60,12 @@ class Test(BaseTestSteganography):
         )
         decoded_message_path = decode_message(
             self.encoded_image_path,
-            save=True,
             output_path=self.output_path,
             message_name=self.message_name,
+            save_message=True,
             password=self.password,
         )
-        message = load_message(decoded_message_path)
+        message = load_message_file(decoded_message_path)
 
         self.assertTrue(os.path.isfile(self.encoded_image_path))
         self.assertEqual(self.message, message)
@@ -80,7 +80,7 @@ class Test(BaseTestSteganography):
             compress=True,
         )
 
-        decoded_message = decode_message(self.encoded_image_path)
+        decoded_message = decode_message(image_path=self.encoded_image_path)
 
         self.assertTrue(os.path.isfile(self.encoded_image_path))
         self.assertNotEqual(self.message, decoded_message)
@@ -95,7 +95,9 @@ class Test(BaseTestSteganography):
             compress=True,
         )
         decoded_message = decode_message(
-            self.encoded_image_path, password=self.password
+            image_path=self.encoded_image_path,
+            message_name=None,
+            password=self.password,
         )
 
         self.assertTrue(os.path.isfile(self.encoded_image_path))
