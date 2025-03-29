@@ -25,9 +25,31 @@ init:
 	$(PIP) install -r requirements.txt
 	touch $(VENV_DIR)
 
-clear-venv:
-	@echo "==> Remove virtualenv."
-	rm -r $(VENV_DIR)
+del-venv:
+	@echo "==> Delete the virtualenv."
+	rm -fr $(VENV_DIR)
+
+clean-build:
+	@echo "==> Remove build artifacts."
+	rm -fr build/
+	rm -fr dist/
+	rm -fr .eggs/
+
+clean-pyc:
+	@echo "==> Remove python file artifacts."
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +
+
+clean-test:
+	@echo "==> Remove test and coverage artifacts."
+	rm -f .coverage
+	rm -fr .tox/
+	rm -fr htmlcov/
+	rm -fr .pytest_cache
+
+clean: clean-build clean-pyc clean-test
 
 pre-commit-install:
 	@echo "==> Installing pre-commit hooks..."
