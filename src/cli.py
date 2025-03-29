@@ -1,14 +1,46 @@
+from typing import Optional
+
 import click
 
-from src.config import DEFAULT_OUTPUT_DIR
+from src.config import ABOUT_PROJECT, DEFAULT_OUTPUT_DIR
 from src.exceptions import InvalidPasswordError
-from src.logger import setup_logger
+from src.logger import logger, setup_logger
 from src.steganography.encoder import encode_message
 
 
+def __request_password(confirm: bool = False) -> str:
+    """
+    Request the user to input a password and confirm it.
+
+    :return: The password entered by the user.
+    :raises InvalidPasswordError: If the passwords don't match.
+    """
+    password = click.prompt("Password", hide_input=True)
+
+    if confirm:
+        confirm_password = click.prompt("Confirm password", hide_input=True)
+
+        if password != confirm_password:
+            raise InvalidPasswordError("Passwords don't match!")
+
+    return password
+
+
 @click.group()
-def cli():
-    pass
+@click.option(
+    "-v",
+    "--verbosity",
+    required=False,
+    count=True,
+    help="Increase output verbosity",
+)
+def cli(verbosity: int):
+    setup_logger(verbosity)
+
+
+@cli.command()
+def about():
+    click.echo(ABOUT_PROJECT)
 
 
 @cli.command()
@@ -54,25 +86,15 @@ def cli():
     is_flag=True,
     help="Encrypt the message before embedding it.",
 )
-@click.option(
-    "-v",
-    "--verbosity",
-    required=False,
-    count=True,
-    help="Increase output verbosity",
-)
 def encode(
     image_path: str,
-    message: str,
-    message_path: str,
-    output_path: str,
-    image_name: str,
+    message: Optional[str],
+    message_path: Optional[str],
+    output_path: Optional[str],
+    image_name: Optional[str],
     compress: bool,
     encrypt: bool,
-    verbosity,
 ):
-    logger = setup_logger(verbosity)
-
     try:
         logger.info(
             f"Starting message encoding process for image: {image_path}"
@@ -80,14 +102,7 @@ def encode(
 
         password = None
         if encrypt:
-            logger.info("Encryption requested, prompting for password.")
-            password = click.prompt("Password", hide_input=True)
-            confirm_password = click.prompt(
-                "Confirm password", hide_input=True
-            )
-
-            if password != confirm_password:
-                raise InvalidPasswordError("Passwords don't match!")
+            password = __request_password(confirm=True)
 
         new_image_path = encode_message(
             image_path=image_path,

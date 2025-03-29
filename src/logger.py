@@ -1,30 +1,26 @@
 import logging
 import sys
 
-from src.config import LOG_FORMAT, PROJECT_NAME
+from src.config import LOG_FORMAT, LOGGING_LEVEL_LIST, PROJECT_NAME
 
 
-def __get_verbosity(verbosity: int) -> int:
+def __get_verbosity_level(verbosity: int) -> int:
     """
-    Get logging level based on verbosity:
-        - 0: NOT_SET,
-        - 1: INFO,
-        - >=2: DEBUG
+    Get the logging level based on the input integer.
 
-    :param verbosity: Verbosity level
-    :return: Logging level
+    :param verbosity: Verbosity level as an integer
+    :return: Corresponding logging level
     """
-    if verbosity == 0:
-        return logging.NOTSET
-    elif verbosity == 1:
-        return logging.INFO
-    elif verbosity >= 2:
-        return logging.DEBUG
+    if verbosity < 0:
+        verbosity = 0
+    elif verbosity >= len(LOGGING_LEVEL_LIST):
+        verbosity = len(LOGGING_LEVEL_LIST) - 1
+    return LOGGING_LEVEL_LIST[verbosity]
 
 
 def setup_logger(verbosity: int = 0):
     """
-    Set up a logger with configurable verbosity levels.
+    Set up the global logger with configurable verbosity levels.
 
     :param verbosity: Verbosity level
     :return: Configured logger
@@ -43,8 +39,7 @@ def setup_logger(verbosity: int = 0):
     # Add handler to logger
     my_logger.addHandler(console_handler)
 
-    # Set logging level based on verbosity
-    level = __get_verbosity(verbosity)
+    level = __get_verbosity_level(verbosity)
     my_logger.setLevel(level)
 
     return my_logger
