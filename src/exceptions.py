@@ -6,19 +6,23 @@ class ImageFileNotFoundError(FileNotFoundError):
     pass
 
 
-class MessageTooLargeError(Exception):
-    pass
-
-
 class FileAlreadyExistsError(FileExistsError):
     pass
 
 
-class NoMessageFoundError(Exception):
+class InputMessageConflictError(ValueError):
     pass
 
 
-class InvalidPasswordError(Exception):
+class MessageTooLargeError(ValueError):
+    pass
+
+
+class NoMessageFoundError(ValueError):
+    pass
+
+
+class InvalidPasswordError(ValueError):
     pass
 
 

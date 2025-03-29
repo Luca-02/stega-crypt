@@ -3,40 +3,59 @@ from typing import Optional
 
 import numpy as np
 
-from src.steganography.file_handler import load_image, load_message, save_image
+from src.config import (
+    DEFAULT_OUTPUT_DIR,
+    DELIMITER_SUFFIX,
+    MODIFIED_IMAGE_SUFFIX,
+)
+from src.cryptography.encrypt import encrypt_data
+from src.exceptions import (
+    InputMessageConflictError,
+    MessageTooLargeError,
+    NoMessageFoundError,
+)
+from src.logger import logger
+from src.steganography.compressor import compress_message
+from src.steganography.file_handler import (
+    load_image_file,
+    load_message_file,
+    save_image_file,
+)
 
-from ..config import COMPRESSION_PREFIX, DEFAULT_OUTPUT_DIR, DELIMITER_SUFFIX
-from ..cryptography.encrypt import encrypt_data
-from ..exceptions import MessageTooLargeError, NoMessageFoundError
-from .compressor import compress_message
 
-
-def __create_hidden_message(message: str, password: str, compression: bool) -> bytes:
+def __create_hidden_message(
+    message: str,
+    password: str,
+    compression: bool,
+) -> bytes:
     """
     Prepare the message to hide, with or without compression.
 
     :param message: The plaintext message.
     :param password: If different then None, apply encryption with it.
-    :param compression: If True, apply compression. If False, no compression.
-    If None, automatically choose the most efficient option.
+    :param compression: If True, apply compression if it's convenient.
     :return: The message ready to be hidden in the image.
     """
+    logger.debug(
+        f"Creating hidden message: "
+        f"compression={compression}, password_provided={bool(password)}"
+    )
+
     if password:
+        logger.debug("Encrypting message")
         data = encrypt_data(message.encode(), password)
     else:
         data = message.encode()
 
-    hidden_message = data + DELIMITER_SUFFIX.encode()
+    hidden_message: bytes
     if compression is False:
-        return hidden_message
+        hidden_message = data
+        logger.debug("No compression applied")
+    else:
+        hidden_message = compress_message(data)
+        logger.debug("Message compressed")
 
-    compressed_message = (
-        COMPRESSION_PREFIX.encode() + compress_message(data) + DELIMITER_SUFFIX.encode()
-    )
-    if compression or len(compressed_message) < len(hidden_message):
-        return compressed_message
-
-    return hidden_message
+    return hidden_message + DELIMITER_SUFFIX.encode()
 
 
 def __bytes_to_bits_binary_list(byte_data: bytes) -> np.ndarray:
@@ -46,6 +65,7 @@ def __bytes_to_bits_binary_list(byte_data: bytes) -> np.ndarray:
     :param byte_data: Bytes to convert.
     :return: NumPy array of bits (0s and 1s).
     """
+    logger.debug(f"Converting {len(byte_data)} bytes to binary list")
     return np.unpackbits(np.frombuffer(byte_data, dtype=np.uint8))
 
 
@@ -56,6 +76,9 @@ def __modify_lsb(flat_data: np.ndarray, b_message: np.ndarray) -> None:
     :param flat_data: Flattened NumPy array of image pixels.
     :param b_message: NumPy array of binary bits representing the message.
     """
+    logger.debug(
+        f"Modifying LSB of {len(flat_data)} pixels with {len(b_message)} message bits"
+    )
     target_data = flat_data[: len(b_message)]
 
     # Set the LSBs to 0 and then insert message bits
@@ -71,10 +94,13 @@ def __add_noise(flat_data: np.ndarray, used_bits: int) -> None:
     :param flat_data: NumPy array representing the image data.
     :param used_bits: Number of bits used for message encoding.
     """
+    logger.debug(f"Adding noise to {len(flat_data) - used_bits} unused bits")
     unused_data = flat_data[used_bits:]
 
     # Generate a random binary mask (0 or 1) for flipping LSBs
-    noise_mask = np.random.randint(2, size=unused_data.shape, dtype=np.uint8)
+    noise_mask = np.random.choice(
+        [0, 1], size=unused_data.shape, p=[0.7, 0.3]
+    ).astype(np.uint8)
 
     # Apply the noise mask using XOR (flips LSB randomly)
     unused_data ^= noise_mask
@@ -83,7 +109,8 @@ def __add_noise(flat_data: np.ndarray, used_bits: int) -> None:
 
 
 def __embed_hidden_message_in_image(
-    image_data: np.ndarray, binary_message: np.ndarray
+    image_data: np.ndarray,
+    binary_message: np.ndarray,
 ) -> np.ndarray:
     """
     Embed message bits into the LSB of the image pixels adding some random noise.
@@ -96,10 +123,13 @@ def __embed_hidden_message_in_image(
     # Flatten the pixel arrays
     flat_data = image_data.flatten()
 
+    logger.info(f"Embedding message: size={len(binary_message)} bits")
+
     # Check if message will fit
     if len(binary_message) > len(flat_data):
         raise MessageTooLargeError(
-            f"Message too large! ({len(binary_message)} bit) - Maximum capacity: {len(flat_data)} bit."
+            f"Message too large! ({len(binary_message)} bit) "
+            f"- Max capacity: {len(flat_data)} bit."
         )
 
     # Add message and random noise
@@ -115,24 +145,27 @@ def encode_message(
     message: Optional[str] = None,
     message_path: Optional[str] = None,
     output_path: Optional[str] = DEFAULT_OUTPUT_DIR,
-    new_image_name: Optional[str] = None,
+    image_name: Optional[str] = None,
+    compress: Optional[bool] = True,
     password: Optional[str] = None,
-    compress: Optional[bool] = None,
-) -> None:
+) -> str:
     """
     Encodes a hidden compressed message into an image using the Least Significant Bit (LSB) technique.
 
     :param image_path: The path to the input image.
     :param message: Message to hide (if not using a text file).
     :param message_path: Path to the text file containing the message (optional).
-    :param output_path: The output folder to save the modified image. Default is './.output'.
-    :param new_image_name: The name of the new image file.
+    :param output_path: The output folder to save the modified image. Default is the current path.
+    :param image_name: The name of the new image file.
     If not specified, '-modified' is appended to the original name.
+    :param compress: Boolean value to indicate whether to compress the message.
+    If It's true, it will be automatically compressed if it is convenient with respect to the weight
+    of the compressed message.
     :param password: The password to encrypt the hidden message.
     If not specified the message will not be encrypted.
-    :param compress: Boolean value to indicate whether to compress the message.
-    If not specified it will be
-    automatically compressed if it is convenient with respect to the weight of the compressed message.
+    :return: Path to the new image file with the embedded hidden message.
+    :raises InputMessageConflictError: If there is an input message conflict receiving both
+    message and message_path.
     :raises MessageFileNotFoundError: If the message is not found.
     :raises ImageFileNotFoundError: If the image file is not found.
     :raises NoMessageFoundError: If the message is empty.
@@ -140,30 +173,49 @@ def encode_message(
     :raises FileAlreadyExistsError: If the output file already exists.
     :raises Exception: For any other unexpected error.
     """
+    logger.info(f"Starting message encoding: image_path={image_path}")
+
+    if message and message_path:
+        raise InputMessageConflictError(
+            "Input message conflict, choose whether to use a string or a text file"
+        )
+
     if message_path:
-        message = load_message(message_path)
+        logger.info(f"Loading message from file: {message_path}")
+        message = load_message_file(message_path)
 
     # Validate message
     if not message:
         raise NoMessageFoundError("You can't use an empty message.")
 
-    image_data = load_image(image_path)
+    logger.info(f"Message loaded: {len(message)} characters")
+
+    image_data = load_image_file(image_path)
+    logger.debug(
+        f"Image loaded: shape={image_data.shape}, type={image_data.dtype}"
+    )
 
     # Create the hidden message
     hidden_message = __create_hidden_message(message, password, compress)
+    logger.debug(f"Hidden message prepared: size={len(hidden_message)} bytes")
 
     # Convert to bit array
     binary_message = __bytes_to_bits_binary_list(hidden_message)
 
     # Embed message in image
-    modified_image = __embed_hidden_message_in_image(image_data, binary_message)
+    modified_image = __embed_hidden_message_in_image(
+        image_data, binary_message
+    )
 
     # If the modified image name is not specified, add "-modified" to the original name
-    if new_image_name is None:
+    if image_name is None:
         base_name = os.path.splitext(os.path.basename(image_path))[0]
-        new_image_name = f"{base_name}-modified"
+        image_name = f"{base_name}{MODIFIED_IMAGE_SUFFIX}"
 
     # Determines the extent of the input image
     image_format = os.path.splitext(image_path)[1].lower().strip(".")
 
-    save_image(modified_image, output_path, new_image_name, image_format)
+    logger.info(f"Saving modified image: {image_name}.{image_format}")
+    return save_image_file(
+        modified_image, output_path, image_name, image_format
+    )

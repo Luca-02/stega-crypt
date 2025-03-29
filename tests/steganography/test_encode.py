@@ -5,6 +5,7 @@ from PIL import UnidentifiedImageError
 from src.exceptions import (
     FileAlreadyExistsError,
     ImageFileNotFoundError,
+    InputMessageConflictError,
     MessageFileNotFoundError,
     MessageTooLargeError,
     NoMessageFoundError,
@@ -14,10 +15,21 @@ from tests.steganography.base_test_stenography import BaseTestSteganography
 
 
 class Test(BaseTestSteganography):
+    def test_encode_input_message_conflict_error(self):
+        with self.assertRaises(InputMessageConflictError):
+            encode_message(
+                image_path=self.image_path,
+                message="test",
+                message_path="test",
+                output_path=self.output_path,
+            )
+
     def test_encode_empty_message_error(self):
         with self.assertRaises(NoMessageFoundError):
             encode_message(
-                image_path=self.image_path, message="", output_path=self.output_path
+                image_path=self.image_path,
+                message="",
+                output_path=self.output_path,
             )
 
     def test_encode_message_too_large_error(self):
@@ -26,7 +38,7 @@ class Test(BaseTestSteganography):
                 image_path=self.image_path,
                 message="A" * (self.img_size[0] ** 2 * 2),
                 output_path=self.output_path,
-                new_image_name="encoded_image",
+                image_name=self.image_name,
                 password=self.password,
                 compress=True,
             )
@@ -80,7 +92,7 @@ class Test(BaseTestSteganography):
             image_path=self.image_path,
             message=self.message,
             output_path=self.output_path,
-            new_image_name="encoded_image",
+            image_name=self.image_name,
         )
 
         with self.assertRaises(FileAlreadyExistsError):
@@ -88,7 +100,7 @@ class Test(BaseTestSteganography):
                 image_path=self.image_path,
                 message=self.message,
                 output_path=self.output_path,
-                new_image_name="encoded_image",
+                image_name=self.image_name,
             )
 
     def test_encode_invalid_output_path_error(self):

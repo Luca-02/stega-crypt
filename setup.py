@@ -1,8 +1,10 @@
 from setuptools import find_packages, setup
 
+from __version__ import VERSION
+
 setup(
     name="stega-crypt",
-    version="0.1",
+    version=VERSION,
     description="",
     author="Luca Milanesi",
     author_email="milanesiluca2002@gmail.com",
