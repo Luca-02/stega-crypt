@@ -21,6 +21,7 @@ init:
 	@echo "==> Initialize virtualenv..."
 	python -m venv $(VENV_DIR)
 	@echo "==> Installing dependencies..."
+	$(PIP) install --upgrade pip
 	$(PIP) install $(PYTEST) $(PYTEST_COV) $(BLACK) $(ISORT) $(FLAKE8) $(PRE_COMMIT)
 	$(PIP) install -r requirements.txt
 	touch $(VENV_DIR)
