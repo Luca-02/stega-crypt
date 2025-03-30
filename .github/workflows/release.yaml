@@ -23,6 +23,9 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Clean build
+        run: make clean-build
+
       - name: Install dependencies and build package
         run: make package
 
