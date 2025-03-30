@@ -1,8 +1,10 @@
 import logging
 import os
 
-# Project name
+# Project info
 PROJECT_NAME = "stega-crypt"
+PROJECT_URL = "https://github.com/Luca-02/stega-crypt"
+AUTHOR = "Luca Milanesi"
 
 # Project directories
 DEFAULT_OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,4 +37,6 @@ ABOUT_PROJECT = (
     "\nUsing the Least Significant Bit (LSB) technique, it embeds data "
     "in image pixels with minimal visual impact, while offering optional "
     "encryption and compression.\n"
+    f"\nCreated by: {AUTHOR}"
+    f"\nProject URL: {PROJECT_URL}\n"
 )

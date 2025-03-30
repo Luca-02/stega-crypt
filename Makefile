@@ -9,11 +9,30 @@ BLACK := black
 ISORT := isort
 FLAKE8 := flake8
 PRE_COMMIT := pre-commit
+SETUPTOOLS := setuptools
+WHEEL := wheel
+
+help:
+	@echo "Usage: make [target]"
+	@echo "Targets:"
+	@echo "- package: Build the package"
+	@echo "- init: Install dependencies"
+	@echo "- run: Run the application"
+	@echo "- clean: Remove all build and cache files"
+	@echo "- test: Run tests with coverage"
+	@echo "- test-report: Generate HTML coverage report"
+	@echo "- codecov-test: Run tests with CI coverage output"
+	@echo "- lint: Lint the code"
+	@echo "- format: Check code formatting"
+	@echo "- check: Run lint and format checks"
+	@echo "- full-check: Run all checks and tests"
+	@echo "- pre-commit-install: Install pre-commit hooks"
+	@echo "- pre-commit: Run pre-commit hooks"
 
 package:
 	@echo "==> Building the package..."
 	python -m pip install --upgrade pip
-	pip install setuptools wheel
+	pip install $(SETUPTOOLS) $(WHEEL)
 	python setup.py sdist bdist_wheel
 
 init:
@@ -25,8 +44,6 @@ init:
 run:
 	@echo "==> Running the application..."
 	python $(ENTRY_POINT) $(ARGS)
-
-clean: clean-build clean-pyc clean-test
 
 clean-build:
 	@echo "==> Removing build artifacts..."
@@ -45,13 +62,7 @@ clean-test:
 	rm -f .coverage
 	rm -rf .tox/ htmlcov/ .pytest_cache
 
-pre-commit-install:
-	@echo "==> Installing pre-commit hooks..."
-	$(PRE_COMMIT) install
-
-pre-commit:
-	@echo "==> Running pre-commit hooks..."
-	$(PRE_COMMIT) run --all-files
+clean: clean-build clean-pyc clean-test
 
 test:
 	@echo "==> Running tests with coverage..."
@@ -77,3 +88,11 @@ format:
 check: lint format
 
 full-check: check test
+
+pre-commit-install:
+	@echo "==> Installing pre-commit hooks..."
+	$(PRE_COMMIT) install
+
+pre-commit:
+	@echo "==> Running pre-commit hooks..."
+	$(PRE_COMMIT) run --all-files

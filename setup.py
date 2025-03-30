@@ -2,7 +2,7 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-from src.config import PROJECT_NAME
+from src.config import AUTHOR, PROJECT_NAME, PROJECT_URL
 
 this_directory = Path(__file__).parent
 
@@ -15,20 +15,16 @@ setup(
     description="A steganography library with cryptography for hiding messages in images.",
     long_description=(this_directory / "README.md").read_text(),
     long_description_content_type="text/markdown",
-    author="Luca Milanesi",
+    author=AUTHOR,
     author_email="milanesiluca2002@gmail.com",
-    url="https://github.com/Luca-02/stega-crypt",
-    project_urls={
-        "Source Code": "https://github.com/Luca-02/stega-crypt",
-    },
+    url=PROJECT_URL,
+    project_urls={"Source Code": PROJECT_URL},
     python_requires=">=3.10",
-    packages=find_packages(exclude=("tests*",)),
+    packages=find_packages(exclude=["tests", "tests.*"]),
     include_package_data=True,
-    license="Apache License 2.0",
+    license=(this_directory / "LICENSE").read_text(),
     install_requires=required,
     entry_points={
-        "console_scripts": [
-            "stega-crypt = src.cli:cli",
-        ],
+        "console_scripts": ["stega-crypt = src.cli:cli"],
     },
 )
