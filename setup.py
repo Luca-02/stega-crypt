@@ -22,7 +22,7 @@ setup(
     python_requires=">=3.10",
     packages=find_packages(exclude=["tests", "tests.*"]),
     include_package_data=True,
-    license=(this_directory / "LICENSE").read_text(),
+    license="Apache License 2.0",
     install_requires=required,
     entry_points={
         "console_scripts": ["stega-crypt = src.cli:cli"],

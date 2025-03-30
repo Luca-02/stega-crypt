@@ -1,5 +1,10 @@
 # stega-crypt
 
+![PyPI](https://img.shields.io/pypi/v/stega-crypt)
+![License](https://img.shields.io/github/license/Luca-02/stega-crypt)
+![Build Status](https://img.shields.io/github/actions/workflow/status/Luca-02/stega-crypt/build.yaml)
+![Coverage](https://img.shields.io/codecov/c/github/Luca-02/stega-crypt)
+
 A steganography tool for securely hiding messages within images.
 
 ## Overview
