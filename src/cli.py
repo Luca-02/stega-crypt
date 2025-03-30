@@ -1,5 +1,6 @@
 from typing import Optional
 
+import art
 import click
 
 from src.config import (
@@ -7,6 +8,7 @@ from src.config import (
     DEFAULT_OUTPUT_DIR,
     MESSAGE_NAME_SUFFIX,
     MODIFIED_IMAGE_SUFFIX,
+    PROJECT_NAME,
 )
 from src.exceptions import InvalidPasswordError
 from src.logger import logger, setup_logger
@@ -33,6 +35,7 @@ def __request_password(confirm: bool = False) -> str:
 
 
 @click.group()
+@click.version_option()
 @click.option(
     "-v",
     "--verbosity",
@@ -46,7 +49,7 @@ def cli(verbosity: int):
 
 @cli.command()
 def about():
-    click.echo(ABOUT_PROJECT)
+    click.echo(art.text2art(PROJECT_NAME) + ABOUT_PROJECT)
 
 
 @cli.command()

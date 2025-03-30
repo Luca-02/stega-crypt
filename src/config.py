@@ -29,7 +29,10 @@ LOGGING_LEVEL_LIST = (logging.NOTSET, logging.INFO, logging.DEBUG)
 # String constants
 MODIFIED_IMAGE_SUFFIX = "-modified"
 MESSAGE_NAME_SUFFIX = "-message"
-ABOUT_PROJECT = f"""
-{PROJECT_NAME} is a stenography tool designed for secure message hiding within images.
-It utilizes also cryptographic techniques to ensure the confidentiality and integrity of the hidden messages.
-"""
+ABOUT_PROJECT = (
+    "\nThis tool combines steganography and cryptography to provide a "
+    "secure way to hide sensitive messages within image files."
+    "\nUsing the Least Significant Bit (LSB) technique, it embeds data "
+    "in image pixels with minimal visual impact, while offering optional "
+    "encryption and compression.\n"
+)

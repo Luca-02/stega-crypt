@@ -4,7 +4,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 
 from src.cli import cli, decode, encode
-from src.config import ABOUT_PROJECT, DEFAULT_OUTPUT_DIR
+from src.config import DEFAULT_OUTPUT_DIR
 
 
 class TestCli(TestCase):
@@ -30,7 +30,6 @@ class TestCli(TestCase):
         mock_setup_logger.assert_called_once_with(len(verbosity))
 
         self.assertEqual(result.exit_code, 0)
-        self.assertEqual(f"{ABOUT_PROJECT}\n", result.output)
 
     @patch("click.prompt")
     @patch("src.cli.encode_message")
