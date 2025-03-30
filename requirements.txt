@@ -1,0 +1,7 @@
+art==6.4
+click==8.1.8
+cryptography==44.0.2
+numpy==2.2.4
+Pillow==11.1.0
+pycryptodome==3.22.0
+setuptools==78.1.0
