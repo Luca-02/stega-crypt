@@ -2,10 +2,6 @@
 # With WSL on Windows, run 'ubuntu run'
 # before executing any make commands.
 
-VENV_DIR := .venv
-VENV_BIN := $(VENV_DIR)/bin
-PYTHON := $(VENV_BIN)/python
-PIP := $(VENV_BIN)/pip
 ENTRY_POINT := main.py
 PYTEST := pytest
 PYTEST_COV := pytest-cov
@@ -21,21 +17,14 @@ package:
 	python setup.py sdist bdist_wheel
 
 init:
-	@echo "==> Initializing virtualenv..."
-	python -m venv $(VENV_DIR)
 	@echo "==> Installing dependencies..."
-	$(PIP) install --upgrade pip
-	$(PIP) install $(PYTEST) $(PYTEST_COV) $(BLACK) $(ISORT) $(FLAKE8) $(PRE_COMMIT)
-	$(PIP) install -r requirements.txt
-	touch $(VENV_DIR)
-
-del-venv:
-	@echo "==> Deleting virtualenv..."
-	rm -rf $(VENV_DIR)
+	python -m pip install --upgrade pip
+	pip install $(PYTEST) $(PYTEST_COV) $(BLACK) $(ISORT) $(FLAKE8) $(PRE_COMMIT)
+	pip install -r requirements.txt
 
 run:
 	@echo "==> Running the application..."
-	$(PYTHON) $(ENTRY_POINT) $(ARGS)
+	python $(ENTRY_POINT) $(ARGS)
 
 clean: clean-build clean-pyc clean-test
 
@@ -58,32 +47,32 @@ clean-test:
 
 pre-commit-install:
 	@echo "==> Installing pre-commit hooks..."
-	$(VENV_BIN)/$(PRE_COMMIT) install
+	$(PRE_COMMIT) install
 
 pre-commit:
 	@echo "==> Running pre-commit hooks..."
-	$(VENV_BIN)/$(PRE_COMMIT) run --all-files
+	$(PRE_COMMIT) run --all-files
 
 test:
 	@echo "==> Running tests with coverage..."
-	$(VENV_BIN)/$(PYTEST) --cov src
+	$(PYTEST) --cov src
 
 test-report:
 	@echo "==> Running tests with coverage (HTML report)..."
-	$(VENV_BIN)/$(PYTEST) --cov src --cov-report=html
+	$(PYTEST) --cov src --cov-report=html
 
 codecov-test:
 	@echo "==> Running tests with coverage for CI pipeline..."
-	$(VENV_BIN)/$(PYTEST) --cov src --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
+	$(PYTEST) --cov src --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
 
 lint:
 	@echo "==> Linting code with flake8..."
-	$(VENV_BIN)/$(FLAKE8) --config=.flake8
+	$(FLAKE8) --config=.flake8
 
 format:
 	@echo "==> Checking code formatting with black and isort..."
-	$(VENV_BIN)/$(BLACK) . --check
-	$(VENV_BIN)/$(ISORT) . --check-only
+	$(BLACK) . --check
+	$(ISORT) . --check-only
 
 check: lint format
 
