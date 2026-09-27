@@ -1,110 +1,17 @@
 import os
 from typing import Optional
 
-import numpy as np
-
 from src.config import DEFAULT_OUTPUT_DIR, MODIFIED_IMAGE_SUFFIX
 from src.cryptography.aes_gcm import AesGcmCipher
-from src.exceptions import (
-    InputMessageConflictError,
-    MessageTooLargeError,
-    NoMessageFoundError,
-)
+from src.exceptions import InputMessageConflictError, NoMessageFoundError
 from src.logger import logger
 from src.steganography.file_handler import (
     load_image_file,
     load_message_file,
     save_image_file,
 )
+from src.steganography.lsb import SequentialLsbStrategy
 from src.steganography.payload_codec import PayloadCodec
-
-
-def __bytes_to_bits_binary_list(byte_data: bytes) -> np.ndarray:
-    """Convert bytes data to a bit array.
-
-    Args:
-        byte_data: Bytes to convert.
-
-    Returns:
-        NumPy array of bits (0s and 1s).
-    """
-    logger.debug(f"Converting {len(byte_data)} bytes to binary list")
-    return np.unpackbits(np.frombuffer(byte_data, dtype=np.uint8))
-
-
-def __modify_lsb(flat_data: np.ndarray, b_message: np.ndarray) -> None:
-    """Set the least significant bits (LSB) of the pixels to the message bits.
-
-    Args:
-        flat_data: Flattened NumPy array of image pixels, modified in place.
-        b_message: NumPy array of binary bits representing the message.
-    """
-    logger.debug(
-        f"Modifying LSB of {len(flat_data)} pixels with {len(b_message)} message bits"
-    )
-    target_data = flat_data[: len(b_message)]
-
-    # Set the LSBs to 0 and then insert message bits
-    target_data = target_data & ~np.uint8(1) | b_message
-
-    flat_data[: len(b_message)] = target_data
-
-
-def __add_noise(flat_data: np.ndarray, used_bits: int) -> None:
-    """Add random noise to unused LSB bits to make detection harder.
-
-    Args:
-        flat_data: Flattened NumPy array of image pixels, modified in place.
-        used_bits: Number of bits used for message encoding.
-    """
-    logger.debug(f"Adding noise to {len(flat_data) - used_bits} unused bits")
-    unused_data = flat_data[used_bits:]
-
-    # Generate a random binary mask (0 or 1) for flipping LSBs
-    noise_mask = np.random.choice(
-        [0, 1], size=unused_data.shape, p=[0.7, 0.3]
-    ).astype(np.uint8)
-
-    # Apply the noise mask using XOR (flips LSB randomly)
-    unused_data ^= noise_mask
-
-    flat_data[used_bits:] = unused_data
-
-
-def __embed_hidden_message_in_image(
-    image_data: np.ndarray,
-    binary_message: np.ndarray,
-) -> np.ndarray:
-    """Embed message bits into the pixel LSBs and add random noise.
-
-    Args:
-        image_data: NumPy array of image data.
-        binary_message: NumPy array of message binary bits.
-
-    Returns:
-        Modified image data with the embedded message.
-
-    Raises:
-        MessageTooLargeError: If the message doesn't fit in the image.
-    """
-    # Flatten the pixel arrays
-    flat_data = image_data.flatten()
-
-    logger.info(f"Embedding message: size={len(binary_message)} bits")
-
-    # Check if message will fit
-    if len(binary_message) > len(flat_data):
-        raise MessageTooLargeError(
-            f"Message too large! ({len(binary_message)} bit) "
-            f"- Max capacity: {len(flat_data)} bit."
-        )
-
-    # Add message and random noise
-    __modify_lsb(flat_data, binary_message)
-    __add_noise(flat_data, len(binary_message))
-
-    # Reshape back to an image pixel array
-    return np.reshape(flat_data, image_data.shape)
 
 
 def encode_message(
@@ -173,13 +80,9 @@ def encode_message(
     hidden_message = codec.encode(message, password, compress)
     logger.debug(f"Hidden message prepared: size={len(hidden_message)} bytes")
 
-    # Convert to bit array
-    binary_message = __bytes_to_bits_binary_list(hidden_message)
-
     # Embed message in image
-    modified_image = __embed_hidden_message_in_image(
-        image_data, binary_message
-    )
+    strategy = SequentialLsbStrategy()
+    modified_image = strategy.embed(image_data, hidden_message)
 
     # If the modified image name is not specified, add "-modified" to the original name
     if image_name is None:

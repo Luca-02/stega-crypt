@@ -1,48 +1,12 @@
 import os
 from typing import Optional
 
-import numpy as np
-
 from src.config import DEFAULT_OUTPUT_DIR, MESSAGE_NAME_SUFFIX
 from src.cryptography.aes_gcm import AesGcmCipher
 from src.logger import logger
 from src.steganography.file_handler import load_image_file, save_message_file
+from src.steganography.lsb import SequentialLsbStrategy
 from src.steganography.payload_codec import PayloadCodec
-
-
-def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
-    """Extract the least significant bits from the image data.
-
-    Args:
-        image_data: NumPy array of image data.
-
-    Returns:
-        NumPy array of extracted LSB bits.
-    """
-    logger.debug(f"Extracting LSB from image data: shape={image_data.shape}")
-
-    # Flatten the pixel arrays
-    flat_data = image_data.flatten()
-
-    # Extract just the least significant bit from each byte
-    lsb_bits = flat_data & 1
-
-    return lsb_bits
-
-
-def __process_extracted_data(lsb_data: np.ndarray) -> bytes:
-    """Pack the extracted LSB bits into bytes.
-
-    Args:
-        lsb_data: Raw extracted data from the image LSB.
-
-    Returns:
-        The packed bytes, ready to be decoded by the payload codec.
-    """
-    logger.debug(f"Processing extracted LSB data: {len(lsb_data)} bits")
-
-    # Packs binary-valued array into 8-bits array.
-    return np.packbits(lsb_data).tobytes()
 
 
 def decode_message(
@@ -82,12 +46,10 @@ def decode_message(
         f"Image loaded: shape={image_data.shape}, type={image_data.dtype}"
     )
 
-    # Extract LSB data
-    lsb_data = __extract_lsb_data(image_data)
-    logger.debug(f"Extracted LSB data: {len(lsb_data)} bits")
-
-    # Pack the LSB bits and let the payload codec decode the message
-    packed_bytes = __process_extracted_data(lsb_data)
+    # Extract the raw byte stream hidden in the image and let the payload
+    # codec decode the message
+    strategy = SequentialLsbStrategy()
+    packed_bytes = strategy.extract(image_data)
 
     codec = PayloadCodec(AesGcmCipher())
     message = codec.decode(packed_bytes, password)
