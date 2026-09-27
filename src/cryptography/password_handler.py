@@ -42,7 +42,9 @@ def is_valid_password(password: str) -> bool:
     pattern = rf"^\S{{{MIN_PASSWORD_LENGTH},}}$"
     is_valid = bool(match(pattern, password))
 
-    logger.debug("Password validation: " + "success" if is_valid else "failed")
+    logger.debug(
+        "Password validation: " + ("success" if is_valid else "failed")
+    )
     return is_valid
 
 

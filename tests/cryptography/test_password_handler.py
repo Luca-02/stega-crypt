@@ -1,6 +1,7 @@
 import dataclasses
 from unittest import TestCase
 
+from src.config import PROJECT_NAME
 from src.cryptography.password_handler import Password, is_valid_password
 from src.exceptions import InvalidPasswordError
 
@@ -17,6 +18,17 @@ class Test(TestCase):
     def test_invalid_password_length(self):
         password = "c1A"
         self.assertFalse(is_valid_password(password))
+
+    def test_validation_result_is_logged(self):
+        for password, outcome in (("c1A0!?", "success"), ("c1A", "failed")):
+            with self.subTest(outcome=outcome):
+                with self.assertLogs(PROJECT_NAME, level="DEBUG") as logs:
+                    is_valid_password(password)
+
+                self.assertIn(
+                    f"DEBUG:{PROJECT_NAME}:Password validation: {outcome}",
+                    logs.output,
+                )
 
 
 class TestPassword(TestCase):
