@@ -1,13 +1,7 @@
-import os
 from typing import Optional
 
-from src.config import DEFAULT_OUTPUT_DIR, MESSAGE_NAME_SUFFIX
-from src.cryptography.aes_gcm import AesGcmCipher
-from src.logger import logger
-from src.steganography.file_handler import save_message_file
-from src.steganography.image_store import PillowImageStore
-from src.steganography.lsb import SequentialLsbStrategy
-from src.steganography.payload_codec import PayloadCodec
+from src.config import DEFAULT_OUTPUT_DIR
+from src.service import DecodeRequest, create_default_service
 
 
 def decode_message(
@@ -41,29 +35,12 @@ def decode_message(
         FileAlreadyExistsError: If the message file already exists.
         Exception: For any other unexpected error.
     """
-    logger.info(f"Starting message decoding: image_path={image_path}")
-    image_store = PillowImageStore()
-    image_data = image_store.load(image_path)
-    logger.debug(
-        f"Image loaded: shape={image_data.shape}, type={image_data.dtype}"
+    return create_default_service().decode(
+        DecodeRequest(
+            image_path=image_path,
+            output_path=output_path,
+            message_name=message_name,
+            save_message=save_message,
+            password=password,
+        )
     )
-
-    # Extract the raw byte stream hidden in the image and let the payload
-    # codec decode the message
-    strategy = SequentialLsbStrategy()
-    packed_bytes = strategy.extract(image_data)
-
-    codec = PayloadCodec(AesGcmCipher())
-    message = codec.decode(packed_bytes, password)
-
-    if not save_message:
-        return message
-
-    # Determine file name if not specified
-    if message_name is None:
-        base_name = os.path.splitext(os.path.basename(image_path))[0]
-        message_name = f"{base_name}{MESSAGE_NAME_SUFFIX}"
-
-    # Save message if output_path specified
-    logger.info(f"Saving message: {message_name}.txt")
-    return save_message_file(message, output_path, message_name)

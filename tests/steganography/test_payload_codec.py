@@ -4,25 +4,10 @@ import zlib
 from unittest import TestCase
 
 from src.cryptography.aes_gcm import AesGcmCipher
-from src.cryptography.password_handler import Password
 from src.exceptions import DecryptionError, InvalidPasswordError
 from src.steganography.payload_codec import PayloadCodec
+from tests.fakes import FakeCipher
 from tests.steganography.reference import COMPRESSION_PREFIX, DELIMITER
-
-
-class FakeCipher:
-    """Deterministic fake cipher, used to check that PayloadCodec works
-    with any Cipher implementation rather than one tied to AES-GCM.
-    """
-
-    def encrypt(self, data: bytes, password: Password) -> bytes:
-        return b"ENC:" + password.value.encode() + b":" + data
-
-    def decrypt(self, data: bytes, password: Password) -> bytes:
-        prefix = b"ENC:" + password.value.encode() + b":"
-        if not data.startswith(prefix):
-            raise DecryptionError("Fake decryption failed.")
-        return data[len(prefix) :]
 
 
 class TestPayloadCodecEncode(TestCase):
