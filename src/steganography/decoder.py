@@ -3,15 +3,11 @@ from typing import Optional
 
 import numpy as np
 
-from src.config import (
-    DEFAULT_OUTPUT_DIR,
-    DELIMITER_SUFFIX,
-    MESSAGE_NAME_SUFFIX,
-)
-from src.cryptography.decrypt import decrypt_message
+from src.config import DEFAULT_OUTPUT_DIR, MESSAGE_NAME_SUFFIX
+from src.cryptography.aes_gcm import AesGcmCipher
 from src.logger import logger
-from src.steganography.compressor import decompress_message
 from src.steganography.file_handler import load_image_file, save_message_file
+from src.steganography.payload_codec import PayloadCodec
 
 
 def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
@@ -35,36 +31,18 @@ def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
 
 
 def __process_extracted_data(lsb_data: np.ndarray) -> bytes:
-    """Retrieve the hidden data from the extracted bits.
-
-    Reads up to the end delimiter and decompresses the data if the
-    compression prefix is present.
+    """Pack the extracted LSB bits into bytes.
 
     Args:
         lsb_data: Raw extracted data from the image LSB.
 
     Returns:
-        Processed data, decompressed if needed.
+        The packed bytes, ready to be decoded by the payload codec.
     """
     logger.debug(f"Processing extracted LSB data: {len(lsb_data)} bits")
 
     # Packs binary-valued array into 8-bits array.
-    pack_data = np.packbits(lsb_data)
-
-    # Read and convert integers to Unicode characters until
-    # hitting a non-printable character or the delimiter
-    delimiter_suffix_encoded = DELIMITER_SUFFIX.encode()
-    message_bytes = bytearray()
-    for byte in pack_data:
-        message_bytes.append(byte)
-
-        if message_bytes.endswith(delimiter_suffix_encoded):
-            message_bytes = message_bytes[: -len(DELIMITER_SUFFIX)]
-            break
-
-    # Decompress if its compressed
-    logger.debug(f"Extracted message bytes: {len(message_bytes)} bytes")
-    return decompress_message(message_bytes)
+    return np.packbits(lsb_data).tobytes()
 
 
 def decode_message(
@@ -108,17 +86,11 @@ def decode_message(
     lsb_data = __extract_lsb_data(image_data)
     logger.debug(f"Extracted LSB data: {len(lsb_data)} bits")
 
-    # Read and convert integers to Unicode characters until
-    # hitting a non-printable character or the delimiter
-    message_bytes = __process_extracted_data(lsb_data)
+    # Pack the LSB bits and let the payload codec decode the message
+    packed_bytes = __process_extracted_data(lsb_data)
 
-    # Decrypt if its specified
-    if password:
-        logger.info("Decrypting message")
-        message = decrypt_message(message_bytes, password).decode()
-    else:
-        logger.info("No password provided, decoding without decryption")
-        message = message_bytes.decode()
+    codec = PayloadCodec(AesGcmCipher())
+    message = codec.decode(packed_bytes, password)
 
     if not save_message:
         return message

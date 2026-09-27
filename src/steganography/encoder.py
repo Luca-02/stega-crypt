@@ -3,61 +3,20 @@ from typing import Optional
 
 import numpy as np
 
-from src.config import (
-    DEFAULT_OUTPUT_DIR,
-    DELIMITER_SUFFIX,
-    MODIFIED_IMAGE_SUFFIX,
-)
-from src.cryptography.encrypt import encrypt_data
+from src.config import DEFAULT_OUTPUT_DIR, MODIFIED_IMAGE_SUFFIX
+from src.cryptography.aes_gcm import AesGcmCipher
 from src.exceptions import (
     InputMessageConflictError,
     MessageTooLargeError,
     NoMessageFoundError,
 )
 from src.logger import logger
-from src.steganography.compressor import compress_message
 from src.steganography.file_handler import (
     load_image_file,
     load_message_file,
     save_image_file,
 )
-
-
-def __create_hidden_message(
-    message: str,
-    password: str,
-    compression: bool,
-) -> bytes:
-    """Prepare the message to hide, with or without compression.
-
-    Args:
-        message: The plaintext message.
-        password: If different from None, apply encryption with it.
-        compression: If True, apply compression if it's convenient.
-
-    Returns:
-        The message ready to be hidden in the image.
-    """
-    logger.debug(
-        f"Creating hidden message: "
-        f"compression={compression}, password_provided={bool(password)}"
-    )
-
-    if password:
-        logger.debug("Encrypting message")
-        data = encrypt_data(message.encode(), password)
-    else:
-        data = message.encode()
-
-    hidden_message: bytes
-    if compression is False:
-        hidden_message = data
-        logger.debug("No compression applied")
-    else:
-        hidden_message = compress_message(data)
-        logger.debug("Message compressed")
-
-    return hidden_message + DELIMITER_SUFFIX.encode()
+from src.steganography.payload_codec import PayloadCodec
 
 
 def __bytes_to_bits_binary_list(byte_data: bytes) -> np.ndarray:
@@ -210,7 +169,8 @@ def encode_message(
     )
 
     # Create the hidden message
-    hidden_message = __create_hidden_message(message, password, compress)
+    codec = PayloadCodec(AesGcmCipher())
+    hidden_message = codec.encode(message, password, compress)
     logger.debug(f"Hidden message prepared: size={len(hidden_message)} bytes")
 
     # Convert to bit array
