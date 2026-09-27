@@ -10,22 +10,27 @@ from src.logger import logger
 
 
 def generate_salt(byte_size: int) -> bytes:
-    """
-    Generate a random salt for use in key derivation.
+    """Generate a random salt for use in key derivation.
 
-    :return: A random salt as bytes.
+    Args:
+        byte_size: Length of the salt in bytes.
+
+    Returns:
+        A random salt as bytes.
     """
     logger.debug(f"Generating salt of {byte_size} bytes")
     return os.urandom(byte_size)
 
 
 def derive_key_from_password(password: str, salt: bytes) -> bytes:
-    """
-    Generates a secure AES_KEY_LENGTH_BYTE byte key from a password using PBKDF2.
+    """Derive an AES_KEY_LENGTH_BYTE byte key from a password with PBKDF2.
 
-    :param password: The user provided password.
-    :param salt: A salt to make key derivation more secure.
-    :return: An AES_KEY_LENGTH_BYTE byte key for AES encryption.
+    Args:
+        password: The user provided password.
+        salt: A salt to make key derivation more secure.
+
+    Returns:
+        An AES_KEY_LENGTH_BYTE byte key for AES encryption.
     """
     logger.info(
         f"Key derivation from password started: "

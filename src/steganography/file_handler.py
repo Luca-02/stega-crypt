@@ -12,10 +12,14 @@ from src.logger import logger
 
 
 def __ensure_file_doesnt_exists(output_path: str, file_name: str):
-    """
-    Check if the output file already exists
+    """Check that the output file does not exist yet.
 
-    :raises FileAlreadyExistsError: If the file couldn't be saved.
+    Args:
+        output_path: Directory the file will be saved in.
+        file_name: Full path of the file to check.
+
+    Raises:
+        FileAlreadyExistsError: If the file already exists.
     """
     if os.path.isdir(output_path) and os.path.isfile(file_name):
         raise FileAlreadyExistsError(
@@ -24,8 +28,10 @@ def __ensure_file_doesnt_exists(output_path: str, file_name: str):
 
 
 def __ensure_directory_exists(directory: str):
-    """
-    Check if the folder exists, otherwise create it.
+    """Create the directory if it does not exist.
+
+    Args:
+        directory: The directory to check.
     """
     if not os.path.exists(directory):
         logger.debug(f"Creating output directory: {directory}")
@@ -33,12 +39,17 @@ def __ensure_directory_exists(directory: str):
 
 
 def load_message_file(message_path: str) -> str:
-    """
-    Load a text file containing the message and return the message text.
+    """Load a text file containing the message.
 
-    :param message_path: The path to the message file.
-    :return: The message data as a string.
-    :raises MessageFileNotFoundError: If the message file does not exist.
+    Args:
+        message_path: The path to the message file.
+
+    Returns:
+        The message data as a string.
+
+    Raises:
+        MessageFileNotFoundError: If the message file does not exist.
+        Exception: For any other unexpected error.
     """
     logger.info(f"Loading message from file: {message_path}")
 
@@ -65,14 +76,19 @@ def save_message_file(
     output_path: str,
     file_name: str,
 ):
-    """
-    Save a message to the specified path.
+    """Save a message as a UTF-8 text file.
 
-    :param message: Simple string.
-    :param output_path: Directory to save the message in.
-    :param file_name: Name of the output file.
-    :return: Path to the saved file.
-    :raises FileAlreadyExistsError: If the file couldn't be saved.
+    Args:
+        message: The message to save.
+        output_path: Directory to save the message in.
+        file_name: Name of the output file, without extension.
+
+    Returns:
+        Path to the saved file.
+
+    Raises:
+        FileAlreadyExistsError: If the output file already exists.
+        Exception: For any other unexpected error.
     """
     file = f"{file_name}.txt"
     output_file_path = os.path.join(output_path, f"{file}")
@@ -95,13 +111,18 @@ def save_message_file(
 
 
 def load_image_file(image_path: str) -> np.ndarray:
-    """
-    Load an image and return the image data.
+    """Load an image as a NumPy array.
 
-    :param image_path: The path to the image file.
-    :return: The image data as a numpy array.
-    :raises ImageFileNotFoundError: If the image file does not exist.
-    :raises UnidentifiedImageError: If the image file is invalid or corrupted.
+    Args:
+        image_path: The path to the image file.
+
+    Returns:
+        The image data as a NumPy array.
+
+    Raises:
+        ImageFileNotFoundError: If the image file does not exist.
+        UnidentifiedImageError: If the image file is invalid or corrupted.
+        Exception: For any other unexpected error.
     """
     logger.info(f"Loading image: {image_path}")
 
@@ -134,15 +155,20 @@ def save_image_file(
     file_name: str,
     file_format: str,
 ) -> str:
-    """
-    Save an image to the specified path.
+    """Save an image to the specified path.
 
-    :param image_data: NumPy array containing image data.
-    :param output_path: Directory to save the image in.
-    :param file_name: Name of the output file.
-    :param file_format: Image format to save as.
-    :return: Path to the saved file.
-    :raises FileAlreadyExistsError: If the file couldn't be saved.
+    Args:
+        image_data: NumPy array containing image data.
+        output_path: Directory to save the image in.
+        file_name: Name of the output file, without extension.
+        file_format: Image format to save as, also used as extension.
+
+    Returns:
+        Path to the saved file.
+
+    Raises:
+        FileAlreadyExistsError: If the output file already exists.
+        Exception: For any other unexpected error.
     """
     file = f"{file_name}.{file_format}"
     output_file_path = os.path.join(output_path, f"{file}")

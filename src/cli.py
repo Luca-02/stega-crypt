@@ -17,11 +17,16 @@ from src.steganography.encoder import encode_message
 
 
 def __request_password(confirm: bool = False) -> str:
-    """
-    Request the user to input a password and confirm it.
+    """Prompt the user for a password, optionally asking to confirm it.
 
-    :return: The password entered by the user.
-    :raises InvalidPasswordError: If the passwords don't match.
+    Args:
+        confirm: Whether to ask for the password a second time.
+
+    Returns:
+        The password entered by the user.
+
+    Raises:
+        InvalidPasswordError: If the passwords don't match.
     """
     password = click.prompt("Password", hide_input=True)
 

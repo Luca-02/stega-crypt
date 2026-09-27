@@ -15,11 +15,13 @@ from src.steganography.file_handler import load_image_file, save_message_file
 
 
 def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
-    """
-    Extract the least significant bits from the image data.
+    """Extract the least significant bits from the image data.
 
-    :param image_data: NumPy array of image data.
-    :return: NumPy array of extracted LSB bits.
+    Args:
+        image_data: NumPy array of image data.
+
+    Returns:
+        NumPy array of extracted LSB bits.
     """
     logger.debug(f"Extracting LSB from image data: shape={image_data.shape}")
 
@@ -33,12 +35,16 @@ def __extract_lsb_data(image_data: np.ndarray) -> np.ndarray:
 
 
 def __process_extracted_data(lsb_data: np.ndarray) -> bytes:
-    """
-    Process extracted data retrieving the hidden data, handling
-    compression if present.
+    """Retrieve the hidden data from the extracted bits.
 
-    :param lsb_data: Raw extracted data from the image LSB.
-    :return: Processed data, decompressed if needed.
+    Reads up to the end delimiter and decompresses the data if the
+    compression prefix is present.
+
+    Args:
+        lsb_data: Raw extracted data from the image LSB.
+
+    Returns:
+        Processed data, decompressed if needed.
     """
     logger.debug(f"Processing extracted LSB data: {len(lsb_data)} bits")
 
@@ -68,21 +74,29 @@ def decode_message(
     save_message: Optional[bool] = False,
     password: Optional[str] = None,
 ) -> str:
-    """
-    Extracts the hidden message from an image using the Least Significant Bit (LSB) technique.
+    """Extract a hidden message from an image with the LSB technique.
 
-    :param image_path: The path to the image containing the hidden message.
-    :param output_path: The output folder to save the message. Default is the current path.
-    :param message_name: The name of the message file.
-    If not specified, it will be '<image_name>-message'.
-    :param save_message: The flag that specify if they must save the message to a file.
-    :param password: The password to decrypt the hidden message.
-    If not specified the message will not be decrypted.
-    :return: The hidden message extracted from the image.
-    :raises ImageFileNotFoundError: If the image file is not found.
-    :raises UnidentifiedImageError: If the file is not a valid image.
-    :raises NoMessageFoundError: If no valid message was found.
-    :raises Exception: For any other unexpected error.
+    Args:
+        image_path: The path to the image containing the hidden message.
+        output_path: The output folder to save the message. Defaults to
+            DEFAULT_OUTPUT_DIR.
+        message_name: The name of the message file. If not specified, it
+            will be '<image_name>-message'.
+        save_message: Whether to save the message to a file.
+        password: The password to decrypt the hidden message. If not
+            specified, the message is not decrypted.
+
+    Returns:
+        The hidden message, or the path of the saved message file when
+        save_message is True.
+
+    Raises:
+        ImageFileNotFoundError: If the image file is not found.
+        UnidentifiedImageError: If the file is not a valid image.
+        InvalidPasswordError: If the password is not valid.
+        DecryptionError: If the password is wrong or the data is corrupted.
+        FileAlreadyExistsError: If the message file already exists.
+        Exception: For any other unexpected error.
     """
     logger.info(f"Starting message decoding: image_path={image_path}")
     image_data = load_image_file(image_path)

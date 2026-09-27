@@ -5,11 +5,14 @@ from src.config import LOG_FORMAT, LOGGING_LEVEL_LIST, PROJECT_NAME
 
 
 def __get_verbosity_level(verbosity: int) -> int:
-    """
-    Get the logging level based on the input integer.
+    """Map a verbosity count to a logging level.
 
-    :param verbosity: Verbosity level as an integer
-    :return: Corresponding logging level
+    Args:
+        verbosity: Verbosity level as an integer. Values out of range are
+            clamped to the first or last level.
+
+    Returns:
+        The corresponding logging level.
     """
     if verbosity < 0:
         verbosity = 0
@@ -19,11 +22,13 @@ def __get_verbosity_level(verbosity: int) -> int:
 
 
 def setup_logger(verbosity: int = 0):
-    """
-    Set up the global logger with configurable verbosity levels.
+    """Set up the global logger with configurable verbosity levels.
 
-    :param verbosity: Verbosity level
-    :return: Configured logger
+    Args:
+        verbosity: Verbosity level.
+
+    Returns:
+        The configured logger.
     """
     # Create a logger
     my_logger = logging.getLogger(PROJECT_NAME)

@@ -5,13 +5,14 @@ from src.logger import logger
 
 
 def compress_message(data: bytes) -> bytes:
-    """
-    Compresses data if it's convenient adding a compression tag
-    at the start of the data.
+    """Compress data when it is convenient, prepending a compression tag.
 
-    :param data: The data bytes to compress.
-    :return: Compressed data bytes if it's convenient, otherwise
-    the original data.
+    Args:
+        data: The data bytes to compress.
+
+    Returns:
+        The compression prefix followed by the compressed data if that is
+        smaller than the input, otherwise the original data.
     """
     logger.info(
         f"Attempting to compress data (original size: {len(data)} bytes)"
@@ -28,11 +29,14 @@ def compress_message(data: bytes) -> bytes:
 
 
 def decompress_message(data: bytes) -> bytes:
-    """
-    Decompresses data if it's compressed.
+    """Decompress data if it starts with the compression prefix.
 
-    :param data: Data bytes to decompress.
-    :return: Decompressed data bytes.
+    Args:
+        data: Data bytes to decompress.
+
+    Returns:
+        The decompressed data, or the input unchanged when the prefix is
+        missing.
     """
     logger.info(
         f"Checking if data needs decompression (size: {len(data)} bytes)"

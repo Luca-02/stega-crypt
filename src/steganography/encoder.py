@@ -28,13 +28,15 @@ def __create_hidden_message(
     password: str,
     compression: bool,
 ) -> bytes:
-    """
-    Prepare the message to hide, with or without compression.
+    """Prepare the message to hide, with or without compression.
 
-    :param message: The plaintext message.
-    :param password: If different then None, apply encryption with it.
-    :param compression: If True, apply compression if it's convenient.
-    :return: The message ready to be hidden in the image.
+    Args:
+        message: The plaintext message.
+        password: If different from None, apply encryption with it.
+        compression: If True, apply compression if it's convenient.
+
+    Returns:
+        The message ready to be hidden in the image.
     """
     logger.debug(
         f"Creating hidden message: "
@@ -59,22 +61,24 @@ def __create_hidden_message(
 
 
 def __bytes_to_bits_binary_list(byte_data: bytes) -> np.ndarray:
-    """
-    Converts bytes data to a bit array.
+    """Convert bytes data to a bit array.
 
-    :param byte_data: Bytes to convert.
-    :return: NumPy array of bits (0s and 1s).
+    Args:
+        byte_data: Bytes to convert.
+
+    Returns:
+        NumPy array of bits (0s and 1s).
     """
     logger.debug(f"Converting {len(byte_data)} bytes to binary list")
     return np.unpackbits(np.frombuffer(byte_data, dtype=np.uint8))
 
 
 def __modify_lsb(flat_data: np.ndarray, b_message: np.ndarray) -> None:
-    """
-    Change the least significant bits (LSB) of the pixels to the message bits.
+    """Set the least significant bits (LSB) of the pixels to the message bits.
 
-    :param flat_data: Flattened NumPy array of image pixels.
-    :param b_message: NumPy array of binary bits representing the message.
+    Args:
+        flat_data: Flattened NumPy array of image pixels, modified in place.
+        b_message: NumPy array of binary bits representing the message.
     """
     logger.debug(
         f"Modifying LSB of {len(flat_data)} pixels with {len(b_message)} message bits"
@@ -88,11 +92,11 @@ def __modify_lsb(flat_data: np.ndarray, b_message: np.ndarray) -> None:
 
 
 def __add_noise(flat_data: np.ndarray, used_bits: int) -> None:
-    """
-    Adds random noise to unused LSB bits in the image to prevent detection.
+    """Add random noise to unused LSB bits to make detection harder.
 
-    :param flat_data: NumPy array representing the image data.
-    :param used_bits: Number of bits used for message encoding.
+    Args:
+        flat_data: Flattened NumPy array of image pixels, modified in place.
+        used_bits: Number of bits used for message encoding.
     """
     logger.debug(f"Adding noise to {len(flat_data) - used_bits} unused bits")
     unused_data = flat_data[used_bits:]
@@ -112,13 +116,17 @@ def __embed_hidden_message_in_image(
     image_data: np.ndarray,
     binary_message: np.ndarray,
 ) -> np.ndarray:
-    """
-    Embed message bits into the LSB of the image pixels adding some random noise.
+    """Embed message bits into the pixel LSBs and add random noise.
 
-    :param image_data: NumPy array of image data.
-    :param binary_message: NumPy array of message binary bits.
-    :return: Modified image data with embedded message.
-    :raises MessageTooLargeError: If the message doesn't fit in the image.
+    Args:
+        image_data: NumPy array of image data.
+        binary_message: NumPy array of message binary bits.
+
+    Returns:
+        Modified image data with the embedded message.
+
+    Raises:
+        MessageTooLargeError: If the message doesn't fit in the image.
     """
     # Flatten the pixel arrays
     flat_data = image_data.flatten()
@@ -149,29 +157,35 @@ def encode_message(
     compress: Optional[bool] = True,
     password: Optional[str] = None,
 ) -> str:
-    """
-    Encodes a hidden compressed message into an image using the Least Significant Bit (LSB) technique.
+    """Hide a message into an image with the Least Significant Bit technique.
 
-    :param image_path: The path to the input image.
-    :param message: Message to hide (if not using a text file).
-    :param message_path: Path to the text file containing the message (optional).
-    :param output_path: The output folder to save the modified image. Default is the current path.
-    :param image_name: The name of the new image file.
-    If not specified, '-modified' is appended to the original name.
-    :param compress: Boolean value to indicate whether to compress the message.
-    If It's true, it will be automatically compressed if it is convenient with respect to the weight
-    of the compressed message.
-    :param password: The password to encrypt the hidden message.
-    If not specified the message will not be encrypted.
-    :return: Path to the new image file with the embedded hidden message.
-    :raises InputMessageConflictError: If there is an input message conflict receiving both
-    message and message_path.
-    :raises MessageFileNotFoundError: If the message is not found.
-    :raises ImageFileNotFoundError: If the image file is not found.
-    :raises NoMessageFoundError: If the message is empty.
-    :raises MessageTooLargeError: If the message is too large to fit in the image.
-    :raises FileAlreadyExistsError: If the output file already exists.
-    :raises Exception: For any other unexpected error.
+    Args:
+        image_path: The path to the input image.
+        message: Message to hide, when not using a text file.
+        message_path: Path to the text file containing the message.
+        output_path: The output folder to save the modified image.
+            Defaults to DEFAULT_OUTPUT_DIR.
+        image_name: The name of the new image file. If not specified,
+            '-modified' is appended to the original name.
+        compress: Whether to compress the message. When True, the message
+            is compressed only if that makes it smaller.
+        password: The password to encrypt the hidden message. If not
+            specified, the message is not encrypted.
+
+    Returns:
+        Path to the new image file with the embedded hidden message.
+
+    Raises:
+        InputMessageConflictError: If both message and message_path are
+            given.
+        MessageFileNotFoundError: If the message file is not found.
+        NoMessageFoundError: If the message is empty.
+        ImageFileNotFoundError: If the image file is not found.
+        InvalidPasswordError: If the password is not valid.
+        MessageTooLargeError: If the message is too large to fit in the
+            image.
+        FileAlreadyExistsError: If the output file already exists.
+        Exception: For any other unexpected error.
     """
     logger.info(f"Starting message encoding: image_path={image_path}")
 
