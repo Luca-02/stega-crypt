@@ -4,7 +4,8 @@ from typing import Optional
 from src.config import DEFAULT_OUTPUT_DIR, MESSAGE_NAME_SUFFIX
 from src.cryptography.aes_gcm import AesGcmCipher
 from src.logger import logger
-from src.steganography.file_handler import load_image_file, save_message_file
+from src.steganography.file_handler import save_message_file
+from src.steganography.image_store import PillowImageStore
 from src.steganography.lsb import SequentialLsbStrategy
 from src.steganography.payload_codec import PayloadCodec
 
@@ -41,7 +42,8 @@ def decode_message(
         Exception: For any other unexpected error.
     """
     logger.info(f"Starting message decoding: image_path={image_path}")
-    image_data = load_image_file(image_path)
+    image_store = PillowImageStore()
+    image_data = image_store.load(image_path)
     logger.debug(
         f"Image loaded: shape={image_data.shape}, type={image_data.dtype}"
     )

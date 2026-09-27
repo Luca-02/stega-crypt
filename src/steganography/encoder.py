@@ -5,11 +5,8 @@ from src.config import DEFAULT_OUTPUT_DIR, MODIFIED_IMAGE_SUFFIX
 from src.cryptography.aes_gcm import AesGcmCipher
 from src.exceptions import InputMessageConflictError, NoMessageFoundError
 from src.logger import logger
-from src.steganography.file_handler import (
-    load_image_file,
-    load_message_file,
-    save_image_file,
-)
+from src.steganography.file_handler import load_message_file
+from src.steganography.image_store import PillowImageStore
 from src.steganography.lsb import SequentialLsbStrategy
 from src.steganography.payload_codec import PayloadCodec
 
@@ -70,7 +67,8 @@ def encode_message(
 
     logger.info(f"Message loaded: {len(message)} characters")
 
-    image_data = load_image_file(image_path)
+    image_store = PillowImageStore()
+    image_data = image_store.load(image_path)
     logger.debug(
         f"Image loaded: shape={image_data.shape}, type={image_data.dtype}"
     )
@@ -93,6 +91,6 @@ def encode_message(
     image_format = os.path.splitext(image_path)[1].lower().strip(".")
 
     logger.info(f"Saving modified image: {image_name}.{image_format}")
-    return save_image_file(
+    return image_store.save(
         modified_image, output_path, image_name, image_format
     )
