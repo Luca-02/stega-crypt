@@ -1,0 +1,11 @@
+Usage: cli [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version        Show the version and exit.
+  -v, --verbosity  Increase output verbosity
+  --help           Show this message and exit.
+
+Commands:
+  about
+  decode
+  encode

@@ -1,0 +1,13 @@
+Usage: cli encode [OPTIONS] IMAGE_PATH
+
+Options:
+  -m, --message TEXT        Message to hide into the image.
+  -mp, --message-path TEXT  Path of .txt file for the message to hide into the
+                            image.
+  -op, --output-path TEXT   Output folder to save the modified image.  [default:
+                            (current path)]
+  -in, --image-name TEXT    Name of the new image file with the hidden message.
+                            [default: (<original-image>-modified)]
+  -c, --compress            Compress the message before embedding it.
+  -e, --encrypt             Encrypt the message before embedding it.
+  --help                    Show this message and exit.

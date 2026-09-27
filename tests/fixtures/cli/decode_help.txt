@@ -1,0 +1,11 @@
+Usage: cli decode [OPTIONS] IMAGE_PATH
+
+Options:
+  -op, --output-path TEXT   Output folder to save the message text.  [default:
+                            (current path)]
+  -mn, --message-name TEXT  Name of the message text file to save into the
+                            output path.  [default: (<image_name>-message)]
+  -sm, --save-message       Save the extracted message into a file into the
+                            specified output path.
+  -d, --decrypt             Decrypt the hidden message.
+  --help                    Show this message and exit.
