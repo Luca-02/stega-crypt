@@ -1,15 +1,13 @@
-from typing import Optional
-
 from src.config import DEFAULT_OUTPUT_DIR
 from src.service import DecodeRequest, create_default_service
 
 
 def decode_message(
     image_path: str,
-    output_path: Optional[str] = DEFAULT_OUTPUT_DIR,
-    message_name: Optional[str] = None,
-    save_message: Optional[bool] = False,
-    password: Optional[str] = None,
+    output_path: str | None = DEFAULT_OUTPUT_DIR,
+    message_name: str | None = None,
+    save_message: bool | None = False,
+    password: str | None = None,
 ) -> str:
     """Extract a hidden message from an image with the LSB technique.
 

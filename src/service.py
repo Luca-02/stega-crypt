@@ -1,6 +1,5 @@
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 
 from src.config import (
     DEFAULT_OUTPUT_DIR,
@@ -35,12 +34,12 @@ class EncodeRequest:
     """
 
     image_path: str
-    message: Optional[str] = None
-    message_path: Optional[str] = None
-    output_path: Optional[str] = DEFAULT_OUTPUT_DIR
-    image_name: Optional[str] = None
-    compress: Optional[bool] = True
-    password: Optional[str] = field(default=None, repr=False)
+    message: str | None = None
+    message_path: str | None = None
+    output_path: str | None = DEFAULT_OUTPUT_DIR
+    image_name: str | None = None
+    compress: bool | None = True
+    password: str | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -58,10 +57,10 @@ class DecodeRequest:
     """
 
     image_path: str
-    output_path: Optional[str] = DEFAULT_OUTPUT_DIR
-    message_name: Optional[str] = None
-    save_message: Optional[bool] = False
-    password: Optional[str] = field(default=None, repr=False)
+    output_path: str | None = DEFAULT_OUTPUT_DIR
+    message_name: str | None = None
+    save_message: bool | None = False
+    password: str | None = field(default=None, repr=False)
 
 
 class SteganographyService:
@@ -129,7 +128,6 @@ class SteganographyService:
             logger.info(f"Loading message from file: {message_path}")
             message = load_message_file(message_path)
 
-        # Validate message
         if not message:
             raise NoMessageFoundError("You can't use an empty message.")
 
@@ -140,7 +138,6 @@ class SteganographyService:
             f"Image loaded: shape={image_data.shape}, type={image_data.dtype}"
         )
 
-        # Create the hidden message
         hidden_message = self._codec.encode(
             message, request.password, request.compress
         )
@@ -148,7 +145,6 @@ class SteganographyService:
             f"Hidden message prepared: size={len(hidden_message)} bytes"
         )
 
-        # Embed message in image
         modified_image = self._strategy.embed(image_data, hidden_message)
 
         image_name = request.image_name
@@ -194,8 +190,6 @@ class SteganographyService:
             f"Image loaded: shape={image_data.shape}, type={image_data.dtype}"
         )
 
-        # Extract the raw byte stream hidden in the image and let the payload
-        # codec decode the message
         packed_bytes = self._strategy.extract(image_data)
 
         message = self._codec.decode(packed_bytes, request.password)

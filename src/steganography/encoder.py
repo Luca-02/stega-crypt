@@ -1,17 +1,15 @@
-from typing import Optional
-
 from src.config import DEFAULT_OUTPUT_DIR
 from src.service import EncodeRequest, create_default_service
 
 
 def encode_message(
     image_path: str,
-    message: Optional[str] = None,
-    message_path: Optional[str] = None,
-    output_path: Optional[str] = DEFAULT_OUTPUT_DIR,
-    image_name: Optional[str] = None,
-    compress: Optional[bool] = True,
-    password: Optional[str] = None,
+    message: str | None = None,
+    message_path: str | None = None,
+    output_path: str | None = DEFAULT_OUTPUT_DIR,
+    image_name: str | None = None,
+    compress: bool | None = True,
+    password: str | None = None,
 ) -> str:
     """Hide a message into an image with the Least Significant Bit technique.
 

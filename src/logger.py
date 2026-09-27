@@ -21,7 +21,7 @@ def __get_verbosity_level(verbosity: int) -> int:
     return LOGGING_LEVEL_LIST[verbosity]
 
 
-def setup_logger(verbosity: int = 0):
+def setup_logger(verbosity: int = 0) -> logging.Logger:
     """Set up the global logger with configurable verbosity levels.
 
     Args:

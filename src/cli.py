@@ -1,5 +1,3 @@
-from typing import Optional
-
 import art
 import click
 
@@ -48,12 +46,12 @@ def __request_password(confirm: bool = False) -> str:
     count=True,
     help="Increase output verbosity",
 )
-def cli(verbosity: int):
+def cli(verbosity: int) -> None:
     setup_logger(verbosity)
 
 
 @cli.command()
-def about():
+def about() -> None:
     click.echo(art.text2art(PROJECT_NAME) + ABOUT_PROJECT)
 
 
@@ -102,13 +100,13 @@ def about():
 )
 def encode(
     image_path: str,
-    message: Optional[str],
-    message_path: Optional[str],
-    output_path: Optional[str],
-    image_name: Optional[str],
+    message: str | None,
+    message_path: str | None,
+    output_path: str | None,
+    image_name: str | None,
     compress: bool,
     encrypt: bool,
-):
+) -> None:
     try:
         logger.info(
             f"Starting message encoding process for image: {image_path}"
@@ -167,11 +165,11 @@ def encode(
 )
 def decode(
     image_path: str,
-    output_path: Optional[str],
-    message_name: Optional[str],
+    output_path: str | None,
+    message_name: str | None,
     save_message: bool,
     decrypt: bool,
-):
+) -> None:
     try:
         logger.info(
             f"Starting message decoding process for image: {image_path}"
