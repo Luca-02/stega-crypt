@@ -172,15 +172,51 @@ class TestPayloadCodecRoundtrip(TestCase):
 
 
 class TestPayloadCodecWithAesGcmCipher(TestCase):
-    def test_roundtrip_with_real_cipher(self):
-        codec = PayloadCodec(AesGcmCipher())
-        message = "Secret message"
-        password = "password123"
+    def setUp(self) -> None:
+        self.codec = PayloadCodec(AesGcmCipher())
+        self.message = "Secret message"
+        self.password = "password123"
 
+    def test_roundtrip_with_real_cipher(self):
         # Compression stays off: with a random salt the compressed output
         # can contain the end delimiter (known bug), which would make this
         # test flaky. Base64 output never contains it.
-        encoded = codec.encode(message, password=password, compress=False)
-        decoded = codec.decode(encoded, password=password)
+        encoded = self.codec.encode(
+            self.message, password=self.password, compress=False
+        )
+        decoded = self.codec.decode(encoded, password=self.password)
 
-        self.assertEqual(message, decoded)
+        self.assertEqual(self.message, decoded)
+
+    def test_encode_rejects_invalid_password(self):
+        with self.assertRaises(InvalidPasswordError) as context:
+            self.codec.encode(self.message, password="c1A 0!?", compress=False)
+
+        self.assertEqual(
+            "You must provide a password.", str(context.exception)
+        )
+
+    def test_decode_rejects_invalid_password(self):
+        encoded = self.codec.encode(
+            self.message, password=self.password, compress=False
+        )
+
+        with self.assertRaises(InvalidPasswordError) as context:
+            self.codec.decode(encoded, password="c1A 0!?")
+
+        self.assertEqual(
+            "You must provide a password.", str(context.exception)
+        )
+
+    def test_decode_rejects_wrong_password(self):
+        encoded = self.codec.encode(
+            self.message, password=self.password, compress=False
+        )
+
+        with self.assertRaises(DecryptionError) as context:
+            self.codec.decode(encoded, password="wrong_password")
+
+        self.assertEqual(
+            "Decryption error: incorrect key or corrupted data.",
+            str(context.exception),
+        )
